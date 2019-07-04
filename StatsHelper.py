@@ -13,15 +13,15 @@ help_msg = '''------MCD StatsHelper插件------
 ''' + prefix + ''' [玩家] [统计类别] [统计内容] (-uuid)
 
 [统计类别]与[统计内容]
-killed, killed_by, dropped, picked_up, used, mined, custom
+killed, killed_by, dropped, picked_up, used, mined, broken, custom
 killed, killed_by 的[统计内容]为生物id
-picked_up, used, mined 的[统计内容]为物品/方块id
+picked_up, used, mined, broken 的[统计内容]为物品/方块id
 custom 的[统计内容]详见统计信息的json文件
 
 例子：
 ''' + prefix + ''' Fallen_Breath used water_bucket
 ''' + prefix + ''' 85dbd009-69ed-3cc4-b6b6-ac1e6d07202e killed zombie -uuid
-''' + prefix + ''' chino_desu custom timeSinceDeath
+''' + prefix + ''' chino_desu custom time_since_death
 '''
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
 errmsg_file = '未找到该玩家的统计文件！'
