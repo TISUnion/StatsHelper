@@ -4,16 +4,18 @@ import json
 import os
 import urllib2
 
-worldpath = 'world/'
+worldpath = 'server/world/'
 prefix = '!!stats'
 helpmsg = '''------MCD StatsHelper插件------
 命令帮助如下:
 ''' + prefix + ''' 显示帮助信息
-''' + prefix + ''' [玩家] [统计类别] [统计内容名称] (-uuid) 显示[玩家]
+''' + prefix + ''' [玩家] [统计类别] [统计内容] (-uuid)
+例子：!!stats Fallen_Breath used water_bucket
 --------------------------------'''
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
 errmsg_file = '未找到该玩家的统计文件'
 errmsg_target = '参数错误！请输入'+prefix+'以获取插件帮助'
+errmsg_load = 'json reading fail'
 
 def name_to_uuid(name):
 	url = 'http://tools.glowingmines.eu/convertor/nick/' + name
@@ -22,32 +24,49 @@ def name_to_uuid(name):
 	j=json.loads(str(data))
 	return j['offlinesplitteduuid']
 
-def show_stats(server, info, player, type, target, isuuid):
+def print_msg(server, info, str):
+	if info.isPlayer:
+		server.tell(info.player, str)
+	else:
+		print str
+
+def show_stats(server, info, name, classification, target, isuuid):
+	uuid = name
 	if not isuuid:
-		player = name_to_uuid(player)
-	jsonfile = worldpath + 'stats/' + player + '.json'
-	if not os.isfile(jsonfile):
-		server.tell(info.player, errmsg_file)
+		uuid = name_to_uuid(uuid)
+#	print 'uuid = ',uuid
+	jsonfile = worldpath + 'stats/' + uuid + '.json'
+	if not os.path.isfile(jsonfile):
+		print_msg(server, info, errmsg_file)
 		return
 		
-	if not target.startswith('minecraft:'):
-		target = 'minecraft:' + target
-	if not type.startswith('minecraft:'):
-		type = 'minecraft:' + type
+	if classification.startswith('minecraft:'):
+		classification = classification.strip('minecraft:')
+	if target.startswith('minecraft:'):
+		target = target.strip('minecraft:')
 		
 	with open(jsonfile, "r") as f:
-		j = json.load(f)
 		try:
-			data = j[type][target]
-		except KeyError:
-			server.tell(info.player, errmsg_target)
+#			print 'try to read ',jsonfile
+			j = json.load(f)
+		except ValueError:
+			print_msg(server, info, errmsg_load)
 			return
-			
-		str = '该玩家[' + target + ']分类中的[' + target + ']统计信息的值为' + data
-		server.tell(info.player, str)
+		try:
+			data = j['stats']['minecraft:'+classification]['minecraft:'+target]
+		except KeyError:
+			print_msg(server, info, errmsg_target)
+			return
+
+		msg = '玩家' + name + '的统计信息[' + classification + '-' + target + ']的值为[' + str(data) + ']'
+		print_msg(server, info, msg)
 
 def onServerInfo(server, info):
-	command = info.content.split()
+	content = info.content
+	if not info.isPlayer and content.endswith('<--[HERE]'):
+		content = content.strip('<--[HERE]')
+	command = content.split()
+#	print 'command = ', command
 	if command[0] != prefix:
 		return
 	del command[0]
@@ -55,10 +74,7 @@ def onServerInfo(server, info):
 	cmdlen = len(command)
 	if cmdlen == 0:
 		for line in helpmsg.splitlines():
-			if info.isPlayer:
-				server.tell(info.player, line)
-			else:
-				print line
+			print_msg(server, info, line)
 		return
 	
 	isuuid = 0
@@ -67,7 +83,7 @@ def onServerInfo(server, info):
 		del command[cmdlen-1]
 		cmdlen -=1
 		
-	if cmdlen == 3 and info.isPlayer:
+	if cmdlen == 3:
 		show_stats(server, info, command[0], command[1], command[2], isuuid)
 	else:
-		print(errmsg_arg)
+		print_msg(server, info, errmsg_arg)
