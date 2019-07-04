@@ -13,9 +13,9 @@ helpmsg = '''------MCD StatsHelper插件------
 例子：!!stats Fallen_Breath used water_bucket
 --------------------------------'''
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
-errmsg_file = '未找到该玩家的统计文件'
-errmsg_target = '参数错误！请输入'+prefix+'以获取插件帮助'
-errmsg_load = 'json reading fail'
+errmsg_file = '未找到该玩家的统计文件！'
+errmsg_target = '未找到该统计项！'
+errmsg_load = '统计文件读取失败！'
 
 def name_to_uuid(name):
 	url = 'http://tools.glowingmines.eu/convertor/nick/' + name
