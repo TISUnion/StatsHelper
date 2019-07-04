@@ -30,9 +30,9 @@ errmsg_load = '统计文件读取失败！'
 
 def name_to_uuid(name):
 	url = 'http://tools.glowingmines.eu/convertor/nick/' + name
-	response=urllib2.urlopen(url)
+	response = urllib2.urlopen(url)
 	data = response.read()
-	j=json.loads(str(data))
+	j = json.loads(str(data))
 	return j['offlinesplitteduuid']
 
 
@@ -106,7 +106,7 @@ def onServerInfo(server, info):
 	if command[cmdlen-1] == '-uuid':
 		isuuid = 1
 		del command[cmdlen-1]
-		cmdlen -=1
+		cmdlen -= 1
 	
 	debug_print_list(server, info, 'processed command = ', command)
 	if cmdlen == 3:
