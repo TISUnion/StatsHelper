@@ -24,7 +24,6 @@ custom 的[统计内容]详见统计信息的json文件
 【例子】
 ''' + prefix + ''' query Fallen_Breath used water_bucket
 ''' + prefix + ''' query 85dbd009-69ed-3cc4-b6b6-ac1e6d07202e killed zombie -uuid
-''' + prefix + ''' query chino_desu custom time_since_death
 ''' + prefix + ''' rank mined stone
 ''' + prefix + ''' rank custom time_since_rest -bot
 '''
