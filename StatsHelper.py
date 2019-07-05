@@ -151,25 +151,27 @@ def show_rank(server, info, classification, target, listbot):
 		
 		print_msg(server, info, '统计信息[' + classification + '.' + target + ']的前十五名为')
 		maxnamelen = 0
-		for i in range(0, min(rank_amount, len(arr)) - 1):
-			maxnamelen = max(maxnamelen, len(arr[i][0]))
-		for i in range(0, min(rank_amount, len(arr)) - 1):
-			print_msg(server, info, arr[i][0] + ' ' * (maxnamelen - len(arr[i][0]) + 1) + str(arr[i][1]))
+		for i in range(0, min(rank_amount, len(arr))):
+			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
+		for i in range(0, min(rank_amount, len(arr))):
+			msg = '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0]
+			print_msg(server, info, msg)
 	else:
 		print_msg(server, info, 'usercache.json not found')
 
 def onServerInfo(server, info):
 	content = info.content
 	isuuid = content.find('-uuid') >= 0
-	content = content.strip('-uuid')
+	content = content.replace('-uuid', '')
 	listbot = content.find('-bot') >= 0
-	content = content.strip('-bot')
+	content = content.replace('-bot', '')
 	if not info.isPlayer and content.endswith('<--[HERE]'):
-		content = content.strip('<--[HERE]')
+		content = content.replace('<--[HERE]', '')
 		
 	command = content.split()
 	if command[0] != prefix:
 		return
+	debug_print(server, info, 'raw content = ' + info.content)
 	debug_print_list(server, info, 'raw command = ' , command)
 	del command[0]
 	
