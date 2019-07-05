@@ -97,7 +97,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			print_msg(server, info, errmsg_target)
 			return
 
-		msg = '玩家§b' + name + '§的统计信息[§6' + classification + '§r.§e' + target + '§r]的值为§a' + str(data) + '§r'
+		msg = '玩家§b' + name + '§r的统计信息[§6' + classification + '§r.§e' + target + '§r]的值为§a' + str(data) + '§r'
 		print_msg(server, info, msg)
 
 def isbot(name):
@@ -149,7 +149,7 @@ def show_rank(server, info, classification, target, listbot):
 		arr.sort(key = lambda x:x[1])
 		arr.reverse()
 		
-		print_msg(server, info, '统计信息[' + classification + '.' + target + ']的前十五名为')
+		print_msg(server, info, '统计信息[§6' + classification + '§r.§e' + target + '§r]的前十五名为')
 		maxnamelen = 0
 		for i in range(0, min(rank_amount, len(arr))):
 			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
