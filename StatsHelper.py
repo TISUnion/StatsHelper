@@ -6,7 +6,7 @@ import urllib2
 
 worldpath = 'server/world/'
 prefix = '!!stats'
-debug_output = 0
+debug_output = 1
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
