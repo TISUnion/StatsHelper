@@ -173,6 +173,7 @@ def onServerInfo(server, info):
 	command = content.split()
 	if command[0] != prefix:
 		return
+	debug_print(server, info, 'raw content = ' + info.content)
 	debug_print_list(server, info, 'raw command = ' , command)
 	del command[0]
 	
