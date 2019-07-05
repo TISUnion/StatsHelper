@@ -4,7 +4,7 @@ import json
 import os
 import urllib2
 
-serverpath = 'fakeserver/'
+serverpath = 'server/'
 worldpath = serverpath + 'world/'
 prefix = '!!stats'
 debug_output = 0
