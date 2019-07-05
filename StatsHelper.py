@@ -4,7 +4,7 @@ import json
 import os
 import urllib2
 
-worldpath = 'fakeserver/world/'
+worldpath = 'server/world/'
 prefix = '!!stats'
 debug_output = 0
 rank_amount = 15
