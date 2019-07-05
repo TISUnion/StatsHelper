@@ -4,17 +4,17 @@ import json
 import os
 import urllib2
 
-serverpath = 'server/'
+serverpath = 'fakeserver/'
 worldpath = serverpath + 'world/'
 prefix = '!!stats'
 debug_output = 0
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
-【格式说明】
+§a【格式说明】§r
 §7''' + prefix + '''§r 显示帮助信息
 §7''' + prefix + ''' query §b[玩家] §6[统计类别] [统计内容] §7(-uuid)§r
 §7''' + prefix + ''' rank §6[统计类别] [统计内容] §7(-bot)§r
-【参数说明】
+§a【参数说明】§r
 §6[统计类别]§r: §ekilled§r, §ekilled_by§r, §edropped§r, §epicked_up§r, §eused§r, §emined, §ebroken§r, §ecustom§r
 §ekilled§r, §ekilled_by§r 的§6[统计内容]§r为 §e[生物id]§r
 §epicked_up§r, §eused§r, §emined§r, §ebroken§r 的§6[统计内容]为§e[物品/方块id]§r
@@ -22,7 +22,7 @@ help_msg = '''------MCD StatsHelper插件 v1.1------
 上述内容无需带minecraft前缀
 §7(-uuid)§r: 用uuid替换玩家名
 §7(-bot)§r: 统计bot与cam
-【例子】
+§a【例子】§r
 §7''' + prefix + ''' query §bFallen_Breath §6used water_bucket§r
 §7''' + prefix + ''' query §b85dbd009-69ed-3cc4-b6b6-ac1e6d07202e §6killed zombie §7-uuid§r
 §7''' + prefix + ''' rank §6mined stone§r
@@ -160,7 +160,8 @@ def show_rank(server, info, classification, target, listbot):
 			if i == 0: color = '§6'
 			elif i <= 2 : color = '§f'
 			else: color = '§7'
-			print_msg(server, info, color + '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0] + '§r')
+			msg = '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0]
+			print_msg(server, info, color.decode('utf-8') + msg + '§r'.decode('utf-8'))
 	else:
 		print_msg(server, info, '未找到' + filename)
 
