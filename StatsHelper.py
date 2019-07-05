@@ -7,7 +7,7 @@ import urllib2
 serverpath = 'server/'
 worldpath = serverpath + 'world/'
 prefix = '!!stats'
-debug_output = 1
+debug_output = 0
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
@@ -164,11 +164,11 @@ def show_rank(server, info, classification, target, listbot):
 def onServerInfo(server, info):
 	content = info.content
 	isuuid = content.find('-uuid') >= 0
-	content = content.rstrip('-uuid')
+	content = content.replace('-uuid', '')
 	listbot = content.find('-bot') >= 0
-	content = content.rstrip('-bot')
+	content = content.replace('-bot', '')
 	if not info.isPlayer and content.endswith('<--[HERE]'):
-		content = content.strip('<--[HERE]')
+		content = content.replace('<--[HERE]', '')
 		
 	command = content.split()
 	if command[0] != prefix:
