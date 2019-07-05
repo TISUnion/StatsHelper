@@ -3,7 +3,6 @@
 import json
 import os
 import urllib2
-import sys
 
 serverpath = 'server/'
 worldpath = serverpath + 'world/'
@@ -16,10 +15,10 @@ help_msg = '''------MCD StatsHelper插件 v1.1------
 §7''' + prefix + ''' query §b[玩家] §6[统计类别] §e[统计内容] §7(-uuid)§r
 §7''' + prefix + ''' rank §6[统计类别] §e[统计内容] §7(-bot)§r
 §a【参数说明】§r
-§6[统计类别]§r: §ekilled§r, §ekilled_by§r, §edropped§r, §epicked_up§r, §eused§r, §emined, §ebroken§r, §ecustom§r
-§ekilled§r, §ekilled_by§r 的§6[统计内容]§r为 §e[生物id]§r
-§epicked_up§r, §eused§r, §emined§r, §ebroken§r 的§6[统计内容]为§e[物品/方块id]§r
-§ecustom§r 的§6[统计内容]§r详见统计信息的json文件
+§6[统计类别]§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined, §6broken§r, §6custom§r
+§6killed§r, §6killed_by§r 的§e[统计内容]§r为 §e[生物id]§r
+§6picked_up§r, §6used§r, §6mined§r, §6broken§r 的§e[统计内容]为§e[物品/方块id]§r
+§6custom§r 的§e[统计内容]§r详见统计信息的json文件
 上述内容无需带minecraft前缀
 §7(-uuid)§r: 用uuid替换玩家名
 §7(-bot)§r: 统计bot与cam
@@ -93,7 +92,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			debug_print(server, info, '尝试加载' + jsonfile)
 			j = json.load(f)
 		except ValueError:
-			print_msg(server, info, 'cannot open ' + jsonfile)
+			print_msg(server, info, '无法打开' + jsonfile)
 			return
 		try:
 			data = j['stats']['minecraft:' + classification]['minecraft:' + target]
@@ -158,11 +157,8 @@ def show_rank(server, info, classification, target, listbot):
 		for i in range(0, min(rank_amount, len(arr))):
 			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
 		for i in range(0, min(rank_amount, len(arr))):
-			if i == 0: color = '§6'
-			elif i <= 2 : color = '§f'
-			else: color = '§7'
 			msg = '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0]
-			print_msg(server, info, color.decode('utf-8') + msg + '§r'.decode('utf-8'))
+			print_msg(server, info, msg)
 	else:
 		print_msg(server, info, '未找到' + filename)
 
