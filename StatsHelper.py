@@ -3,6 +3,7 @@
 import json
 import os
 import urllib2
+import sys
 
 serverpath = 'server/'
 worldpath = serverpath + 'world/'
@@ -12,8 +13,8 @@ rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 §a【格式说明】§r
 §7''' + prefix + '''§r 显示帮助信息
-§7''' + prefix + ''' query §b[玩家] §6[统计类别] [统计内容] §7(-uuid)§r
-§7''' + prefix + ''' rank §6[统计类别] [统计内容] §7(-bot)§r
+§7''' + prefix + ''' query §b[玩家] §6[统计类别] §e[统计内容] §7(-uuid)§r
+§7''' + prefix + ''' rank §6[统计类别] §e[统计内容] §7(-bot)§r
 §a【参数说明】§r
 §6[统计类别]§r: §ekilled§r, §ekilled_by§r, §edropped§r, §epicked_up§r, §eused§r, §emined, §ebroken§r, §ecustom§r
 §ekilled§r, §ekilled_by§r 的§6[统计内容]§r为 §e[生物id]§r
@@ -23,10 +24,10 @@ help_msg = '''------MCD StatsHelper插件 v1.1------
 §7(-uuid)§r: 用uuid替换玩家名
 §7(-bot)§r: 统计bot与cam
 §a【例子】§r
-§7''' + prefix + ''' query §bFallen_Breath §6used water_bucket§r
-§7''' + prefix + ''' query §b85dbd009-69ed-3cc4-b6b6-ac1e6d07202e §6killed zombie §7-uuid§r
-§7''' + prefix + ''' rank §6mined stone§r
-§7''' + prefix + ''' rank §6custom time_since_rest §7-bot§r
+§7''' + prefix + ''' query §bFallen_Breath §6used §ewater_bucket§r
+§7''' + prefix + ''' query §b85dbd009-69ed-3cc4-b6b6-ac1e6d07202e §6killed §ezombie §7-uuid§r
+§7''' + prefix + ''' rank §6mined §estone§r
+§7''' + prefix + ''' rank §6custom §etime_since_rest §7-bot§r
 '''
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
 errmsg_file = '未找到该玩家的统计文件！'
@@ -92,7 +93,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			debug_print(server, info, '尝试加载' + jsonfile)
 			j = json.load(f)
 		except ValueError:
-			print_msg(server, info, '无法打开' + jsonfile)
+			print_msg(server, info, 'cannot open ' + jsonfile)
 			return
 		try:
 			data = j['stats']['minecraft:' + classification]['minecraft:' + target]
@@ -100,7 +101,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			print_msg(server, info, errmsg_target)
 			return
 
-		msg = '玩家' + name + '的统计信息[' + classification + '.' + target + ']的值为[' + str(data) + ']'
+		msg = '玩家§b'.decode('utf-8') + name + '§r的统计信息§e['.decode('utf-8') + classification + '§r.§e'.decode('utf-8') + target + ']§r的值为§6'.decode('utf-8') + str(data) + '§r'.decode('utf-8')
 		print_msg(server, info, msg)
 
 def isbot(name):
