@@ -97,7 +97,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			print_msg(server, info, errmsg_target)
 			return
 
-		msg = '玩家' + name + '的统计信息[' + classification + '.' + target + ']的值为[' + str(data) + ']'
+		msg = '玩家§b' + name + '§的统计信息[§6' + classification + '§r.§e' + target + '§r]的值为§a' + str(data) + '§r'
 		print_msg(server, info, msg)
 
 def isbot(name):
