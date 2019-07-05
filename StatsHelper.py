@@ -7,7 +7,7 @@ import urllib2
 serverpath = 'server/'
 worldpath = serverpath + 'world/'
 prefix = '!!stats'
-debug_output = 0
+debug_output = 1
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
@@ -154,10 +154,10 @@ def show_rank(server, info, classification, target, listbot):
 		
 		print_msg(server, info, '统计信息[' + classification + '.' + target + ']的前十五名为')
 		maxnamelen = 0
-		for i in range(0, min(rank_amount, len(arr)) - 1):
-			maxnamelen = max(maxnamelen, len(arr[i][1]))
-		for i in range(0, min(rank_amount, len(arr)) - 1):
-			print_msg(server, info, '#' + str(i + 1) + ' ' + arr[i][1] + ' ' * (maxnamelen - len(arr[i][1]) + 1) + str(arr[i][0]))
+		for i in range(0, min(rank_amount, len(arr))):
+			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
+		for i in range(0, min(rank_amount, len(arr))):
+			print_msg(server, info, '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0])
 	else:
 		print_msg(server, info, '未找到' + filename)
 
