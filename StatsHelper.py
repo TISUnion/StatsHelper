@@ -154,13 +154,8 @@ def show_rank(server, info, classification, target, listbot):
 		for i in range(0, min(rank_amount, len(arr))):
 			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
 		for i in range(0, min(rank_amount, len(arr))):
-			if i == 0: color = '§6'
-			elif i <= 2: color = '§f'
-			else: color = '§7'
 			msg = '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0]
-			print_msg(server, info, color)
 			print_msg(server, info, msg)
-			print_msg(server, info, '§r')
 	else:
 		print_msg(server, info, 'usercache.json not found')
 
