@@ -4,7 +4,7 @@ import json
 import os
 import urllib2
 
-serverpath = 'server/'
+serverpath = 'fakeserver/'
 worldpath = serverpath + 'world/'
 prefix = '!!stats'
 debug_output = 0
@@ -31,13 +31,7 @@ help_msg = '''------MCD StatsHelper插件 v1.1------
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
 errmsg_file = '未找到该玩家的统计文件！'
 errmsg_target = '未找到该统计项！'
-
-def print_msg(server, info, msg):
-	for line in msg.splitlines():
-		if info.isPlayer:
-			server.tell(info.player, line)
-		else:
-			print line
+errmsg_load = '统计文件读取失败！'
 
 def debug_print(server, info, msg):
 	if debug_output:
@@ -61,19 +55,22 @@ def name_to_uuid(server, info, name):
 	if os.path.isfile(filename):
 		with open(filename, 'r') as f:
 			try:
-				debug_print(server, info, '尝试加载' + filename)
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, '无法打开' + filename)
+				print_msg(server, info, 'cann\'t open json file '+filename)
 				return name_to_uuid_fromAPI(name)
 			for i in js:
 				if i['name'] == name:
 					return i['uuid']
-			print_msg(server, info, '未在' + filename +'中找到')
-	else:
-		print_msg(server, info, '未找到文件' + filename)
-	print_msg(server, info, '使用API')
+	print_msg(server, info, 'name not found, use API')
 	return name_to_uuid_fromAPI(name)
+
+def print_msg(server, info, msg):
+	for line in msg.splitlines():
+		if info.isPlayer:
+			server.tell(info.player, line)
+		else:
+			print line
 
 def show_stats(server, info, name, classification, target, isuuid):
 	uuid = name
@@ -89,10 +86,10 @@ def show_stats(server, info, name, classification, target, isuuid):
 #	jsonfile='server/a.json'
 	with open(jsonfile, 'r') as f:
 		try:
-			debug_print(server, info, '尝试加载' + jsonfile)
+			debug_print(server, info, 'trying to read ' + jsonfile)
 			j = json.load(f)
 		except ValueError:
-			print_msg(server, info, '无法打开' + jsonfile)
+			print_msg(server, info, errmsg_load)
 			return
 		try:
 			data = j['stats']['minecraft:' + classification]['minecraft:' + target]
@@ -100,7 +97,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			print_msg(server, info, errmsg_target)
 			return
 
-		msg = '玩家§b'.decode('utf-8') + name + '§r的统计信息§e['.decode('utf-8') + classification + '§r.§e'.decode('utf-8') + target + ']§r的值为§6'.decode('utf-8') + str(data) + '§r'.decode('utf-8')
+		msg = '玩家' + name + '的统计信息[' + classification + '.' + target + ']的值为[' + str(data) + ']'
 		print_msg(server, info, msg)
 
 def isbot(name):
@@ -121,7 +118,7 @@ def show_rank(server, info, classification, target, listbot):
 			try:
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, '无法打开' + filename)
+				print_msg(server, info, 'cann\'t open json file '+filename)
 				return name_to_uuid_fromAPI(name)
 			arr = []
 			for i in js:
@@ -154,27 +151,25 @@ def show_rank(server, info, classification, target, listbot):
 		
 		print_msg(server, info, '统计信息[' + classification + '.' + target + ']的前十五名为')
 		maxnamelen = 0
-		for i in range(0, min(rank_amount, len(arr))):
-			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
-		for i in range(0, min(rank_amount, len(arr))):
-			msg = '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0]
-			print_msg(server, info, msg)
+		for i in range(0, min(rank_amount, len(arr)) - 1):
+			maxnamelen = max(maxnamelen, len(arr[i][0]))
+		for i in range(0, min(rank_amount, len(arr)) - 1):
+			print_msg(server, info, arr[i][0] + ' ' * (maxnamelen - len(arr[i][0]) + 1) + str(arr[i][1]))
 	else:
-		print_msg(server, info, '未找到' + filename)
+		print_msg(server, info, 'usercache.json not found')
 
 def onServerInfo(server, info):
 	content = info.content
 	isuuid = content.find('-uuid') >= 0
-	content = content.replace('-uuid', '')
+	content = content.strip('-uuid')
 	listbot = content.find('-bot') >= 0
-	content = content.replace('-bot', '')
+	content = content.strip('-bot')
 	if not info.isPlayer and content.endswith('<--[HERE]'):
-		content = content.replace('<--[HERE]', '')
+		content = content.strip('<--[HERE]')
 		
 	command = content.split()
 	if command[0] != prefix:
 		return
-	debug_print(server, info, 'raw content = ' + info.content)
 	debug_print_list(server, info, 'raw command = ' , command)
 	del command[0]
 	
