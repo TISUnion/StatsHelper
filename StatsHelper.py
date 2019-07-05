@@ -6,7 +6,7 @@ import urllib2
 
 worldpath = 'server/world/'
 prefix = '!!stats'
-debug_output = 0
+debug_output = 1
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
@@ -30,7 +30,6 @@ custom 的[统计内容]详见统计信息的json文件
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
 errmsg_file = '未找到该玩家的统计文件！'
 errmsg_target = '未找到该统计项！'
-errmsg_load = '统计文件读取失败！'
 
 def print_msg(server, info, msg):
 	for line in msg.splitlines():
@@ -64,7 +63,7 @@ def name_to_uuid(server, info, name):
 				debug_print(server, info, '尝试加载' + filename)
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, '无法打开'+filename)
+				print_msg(server, info, '无法打开' + filename)
 				return name_to_uuid_fromAPI(name)
 			for i in js:
 				if i['name'] == name:
@@ -89,7 +88,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 			debug_print(server, info, '尝试加载' + jsonfile)
 			j = json.load(f)
 		except ValueError:
-			print_msg(server, info, errmsg_load)
+			print_msg(server, info, '无法打开' + jsonfile)
 			return
 		try:
 			data = j['stats']['minecraft:' + classification]['minecraft:' + target]
@@ -118,7 +117,7 @@ def show_rank(server, info, classification, target, listbot):
 			try:
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, '无法打开'+filename)
+				print_msg(server, info, '无法打开' + filename)
 				return name_to_uuid_fromAPI(name)
 			arr = []
 			for i in js:
