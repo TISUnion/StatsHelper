@@ -155,9 +155,9 @@ def show_rank(server, info, classification, target, listbot):
 		print_msg(server, info, '统计信息[' + classification + '.' + target + ']的前十五名为')
 		maxnamelen = 0
 		for i in range(0, min(rank_amount, len(arr)) - 1):
-			maxnamelen = max(maxnamelen, len(arr[i][0]))
+			maxnamelen = max(maxnamelen, len(arr[i][1]))
 		for i in range(0, min(rank_amount, len(arr)) - 1):
-			print_msg(server, info, arr[i][0] + ' ' * (maxnamelen - len(arr[i][0]) + 1) + str(arr[i][1]))
+			print_msg(server, info, '#' + str(i + 1) + ' ' + arr[i][1] + ' ' * (maxnamelen - len(arr[i][1]) + 1) + str(arr[i][0]))
 	else:
 		print_msg(server, info, '未找到' + filename)
 
