@@ -11,22 +11,22 @@ debug_output = 0
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
-''' + prefix + ''' 显示帮助信息
-''' + prefix + ''' query [玩家] [统计类别] [统计内容] (-uuid)
-''' + prefix + ''' rank [统计类别] [统计内容] (-bot)
+§7''' + prefix + '''§r 显示帮助信息
+§7''' + prefix + ''' query §b[玩家] §6[统计类别] [统计内容] §7(-uuid)§r
+§7''' + prefix + ''' rank §6[统计类别] [统计内容] §7(-bot)§r
 【参数说明】
-[统计类别]：killed, killed_by, dropped, picked_up, used, mined, broken, custom
-killed, killed_by 的[统计内容]为生物id
-picked_up, used, mined, broken 的[统计内容]为物品/方块id
-custom 的[统计内容]详见统计信息的json文件
+§6[统计类别]§r：§dkilled§r, §dkilled_by§r, §ddropped§r, §dpicked_up§r, §dused§r, §dmined, §dbroken§r, §dcustom§r
+§dkilled§r, §dkilled_by§r 的§6[统计内容]§r为§d[生物id]§r
+§dpicked_up§r, §dused§r, §dmined§r, §dbroken§r 的§6[统计内容]为§d[物品/方块id]§r
+§dcustom§r 的§6[统计内容]§r详见统计信息的json文件
 上述内容无需带minecraft前缀
-(-uuid)：用uuid替换玩家名
-(-bot)：统计bot与cam
+§7(-uuid)§r：用uuid替换玩家名
+§7(-bot)§r：统计bot与cam
 【例子】
-''' + prefix + ''' query Fallen_Breath used water_bucket
-''' + prefix + ''' query 85dbd009-69ed-3cc4-b6b6-ac1e6d07202e killed zombie -uuid
-''' + prefix + ''' rank mined stone
-''' + prefix + ''' rank custom time_since_rest -bot
+§7''' + prefix + ''' query §bFallen_Breath §6used water_bucket§r
+§7''' + prefix + ''' query §b85dbd009-69ed-3cc4-b6b6-ac1e6d07202e §6killed zombie §7-uuid§r
+§7''' + prefix + ''' rank §6mined stone§r
+§7''' + prefix + ''' rank §6custom time_since_rest §7-bot§r
 '''
 errmsg_arg = '参数错误！请输入'+prefix+'以获取插件帮助'
 errmsg_file = '未找到该玩家的统计文件！'
