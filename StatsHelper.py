@@ -15,13 +15,13 @@ help_msg = '''------MCD StatsHelper插件 v1.1------
 §7''' + prefix + ''' query §b[玩家] §6[统计类别] [统计内容] §7(-uuid)§r
 §7''' + prefix + ''' rank §6[统计类别] [统计内容] §7(-bot)§r
 【参数说明】
-§6[统计类别]§r：§dkilled§r, §dkilled_by§r, §ddropped§r, §dpicked_up§r, §dused§r, §dmined, §dbroken§r, §dcustom§r
-§dkilled§r, §dkilled_by§r 的§6[统计内容]§r为§d[生物id]§r
-§dpicked_up§r, §dused§r, §dmined§r, §dbroken§r 的§6[统计内容]为§d[物品/方块id]§r
-§dcustom§r 的§6[统计内容]§r详见统计信息的json文件
+§6[统计类别]§r: §ekilled§r, §ekilled_by§r, §edropped§r, §epicked_up§r, §eused§r, §emined, §ebroken§r, §ecustom§r
+§ekilled§r, §ekilled_by§r 的§6[统计内容]§r为 §e[生物id]§r
+§epicked_up§r, §eused§r, §emined§r, §ebroken§r 的§6[统计内容]为§e[物品/方块id]§r
+§ecustom§r 的§6[统计内容]§r详见统计信息的json文件
 上述内容无需带minecraft前缀
-§7(-uuid)§r：用uuid替换玩家名
-§7(-bot)§r：统计bot与cam
+§7(-uuid)§r: 用uuid替换玩家名
+§7(-bot)§r: 统计bot与cam
 【例子】
 §7''' + prefix + ''' query §bFallen_Breath §6used water_bucket§r
 §7''' + prefix + ''' query §b85dbd009-69ed-3cc4-b6b6-ac1e6d07202e §6killed zombie §7-uuid§r
@@ -157,7 +157,10 @@ def show_rank(server, info, classification, target, listbot):
 		for i in range(0, min(rank_amount, len(arr))):
 			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
 		for i in range(0, min(rank_amount, len(arr))):
-			print_msg(server, info, '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0])
+			if i == 0: color = '§6'
+			elif i <= 2 : color = '§f'
+			else: color = '§7'
+			print_msg(server, info, color + '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0] + '§r')
 	else:
 		print_msg(server, info, '未找到' + filename)
 
