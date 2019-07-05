@@ -6,7 +6,7 @@ import urllib2
 
 worldpath = 'server/world/'
 prefix = '!!stats'
-debug_output = 1
+debug_output = 0
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
@@ -68,7 +68,10 @@ def name_to_uuid(server, info, name):
 			for i in js:
 				if i['name'] == name:
 					return i['uuid']
-	print_msg(server, info, '未在' + filename +'中找到，使用API')
+			print_msg(server, info, '未在' + filename +'中找到')
+	else:
+		print_msg(server, info, '未找到文件' + filename)
+	print_msg(server, info, '使用API')
 	return name_to_uuid_fromAPI(name)
 
 def show_stats(server, info, name, classification, target, isuuid):
