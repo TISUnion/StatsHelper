@@ -32,6 +32,13 @@ errmsg_file = '未找到该玩家的统计文件！'
 errmsg_target = '未找到该统计项！'
 errmsg_load = '统计文件读取失败！'
 
+def print_msg(server, info, msg):
+	for line in msg.splitlines():
+		if info.isPlayer:
+			server.tell(info.player, line)
+		else:
+			print line
+
 def debug_print(server, info, msg):
 	if debug_output:
 		print_msg(server, info, '[StatsHelper]' + msg)
@@ -54,22 +61,16 @@ def name_to_uuid(server, info, name):
 	if os.path.isfile(filename):
 		with open(filename, 'r') as f:
 			try:
+				debug_print(server, info, '尝试加载' + filename)
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, 'cann\'t open json file '+filename)
+				print_msg(server, info, '无法打开'+filename)
 				return name_to_uuid_fromAPI(name)
 			for i in js:
 				if i['name'] == name:
 					return i['uuid']
-	print_msg(server, info, 'name not found, use API')
+	print_msg(server, info, '未在' + filename +'中找到，使用API')
 	return name_to_uuid_fromAPI(name)
-
-def print_msg(server, info, msg):
-	for line in msg.splitlines():
-		if info.isPlayer:
-			server.tell(info.player, line)
-		else:
-			print line
 
 def show_stats(server, info, name, classification, target, isuuid):
 	uuid = name
@@ -85,7 +86,7 @@ def show_stats(server, info, name, classification, target, isuuid):
 #	jsonfile='server/a.json'
 	with open(jsonfile, 'r') as f:
 		try:
-			debug_print(server, info, 'trying to read ' + jsonfile)
+			debug_print(server, info, '尝试加载' + jsonfile)
 			j = json.load(f)
 		except ValueError:
 			print_msg(server, info, errmsg_load)
@@ -117,7 +118,7 @@ def show_rank(server, info, classification, target, listbot):
 			try:
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, 'cann\'t open json file '+filename)
+				print_msg(server, info, '无法打开'+filename)
 				return name_to_uuid_fromAPI(name)
 			arr = []
 			for i in js:
@@ -155,7 +156,7 @@ def show_rank(server, info, classification, target, listbot):
 		for i in range(0, min(rank_amount, len(arr)) - 1):
 			print_msg(server, info, arr[i][0] + ' ' * (maxnamelen - len(arr[i][0]) + 1) + str(arr[i][1]))
 	else:
-		print_msg(server, info, 'usercache.json not found')
+		print_msg(server, info, '未找到' + filename)
 
 def onServerInfo(server, info):
 	content = info.content
