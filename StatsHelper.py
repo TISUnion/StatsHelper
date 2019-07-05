@@ -4,9 +4,10 @@ import json
 import os
 import urllib2
 
-worldpath = 'server/world/'
+serverpath = 'server/'
+worldpath = serverpath + 'world/'
 prefix = '!!stats'
-debug_output = 1
+debug_output = 0
 rank_amount = 15
 help_msg = '''------MCD StatsHelper插件 v1.1------
 【格式说明】
@@ -56,7 +57,7 @@ def name_to_uuid_fromAPI(name):
 	return js['offlinesplitteduuid']
 	
 def name_to_uuid(server, info, name):
-	filename = worldpath + 'usercache.json'
+	filename = serverpath + 'usercache.json'
 	if os.path.isfile(filename):
 		with open(filename, 'r') as f:
 			try:
@@ -113,7 +114,7 @@ def isbot(name):
 	return False
 		
 def show_rank(server, info, classification, target, listbot):
-	filename = worldpath + 'usercache.json'
+	filename = serverpath + 'usercache.json'
 	
 	if os.path.isfile(filename):
 		with open(filename, 'r') as f:
@@ -163,9 +164,9 @@ def show_rank(server, info, classification, target, listbot):
 def onServerInfo(server, info):
 	content = info.content
 	isuuid = content.find('-uuid') >= 0
-	content = content.strip('-uuid')
+	content = content.rstrip('-uuid')
 	listbot = content.find('-bot') >= 0
-	content = content.strip('-bot')
+	content = content.rstrip('-bot')
 	if not info.isPlayer and content.endswith('<--[HERE]'):
 		content = content.strip('<--[HERE]')
 		
