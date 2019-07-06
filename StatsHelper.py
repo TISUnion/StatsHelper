@@ -157,7 +157,7 @@ def show_rank(server, info, classification, target, listbot):
 			if i == 0: color = '6'
 			elif i <= 2: color = 'f'
 			else: color = '7'
-			print_msg(server, info, '§'.decode('utf-8') + color + '#' + str(i + 1) + '§r'.decode('utf-8') + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0])
+			print_msg(server, info, '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0])
 	else:
 		print_msg(server, info, 'usercache.json not found')
 
