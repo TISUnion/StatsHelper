@@ -65,14 +65,17 @@ def name_to_uuid(server, info, name):
 	print_msg(server, info, 'name not found, use API')
 	return name_to_uuid_fromAPI(name)
 
-def print_msg(server, info, msg):
+def print_msg(server, info, msg, istell = True):
 	for line in msg.splitlines():
 		if info.isPlayer:
-			server.tell(info.player, line)
+			if istell:
+				server.tell(info.player, line)
+			else:
+				server.say(line)
 		else:
 			print line
 
-def show_stats(server, info, name, classification, target, isuuid):
+def show_stats(server, info, name, classification, target, isuuid, istell):
 	uuid = name
 	if not isuuid:
 		uuid = name_to_uuid(server, info, uuid)
@@ -98,11 +101,11 @@ def show_stats(server, info, name, classification, target, isuuid):
 			return
 
 		msg = '玩家§b' + name + '§r的统计信息[§6' + classification + '§r.§e' + target + '§r]的值为§a' + str(data) + '§r'
-		print_msg(server, info, msg)
+		print_msg(server, info, msg, istell)
 
 def isbot(name):
 	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#zi_ming###'
-	blackkey = ['farm', 'bot_', 'cam', '_b_']
+	blackkey = ['farm', 'bot_', 'cam', '_b']
 	if blacklist.find(name) >= 0: return True
 	if len(name) <= 4 or len(name) > 16: return True
 	for i in blackkey:
@@ -110,7 +113,7 @@ def isbot(name):
 			return True
 	return False
 		
-def show_rank(server, info, classification, target, listbot):
+def show_rank(server, info, classification, target, listbot, istell):
 	filename = serverpath + 'usercache.json'
 	
 	if os.path.isfile(filename):
@@ -118,7 +121,7 @@ def show_rank(server, info, classification, target, listbot):
 			try:
 				js = json.load(f)
 			except ValueError:
-				print_msg(server, info, 'cann\'t open json file '+filename)
+				print_msg(server, info, 'cann\'t open json file ' + filename)
 				return name_to_uuid_fromAPI(name)
 			arr = []
 			for i in js:
@@ -149,12 +152,12 @@ def show_rank(server, info, classification, target, listbot):
 		arr.sort(key = lambda x:x[1])
 		arr.reverse()
 		
-		print_msg(server, info, '统计信息[§6' + classification + '§r.§e' + target + '§r]的前十五名为')
+		print_msg(server, info, '统计信息[§6' + classification + '§r.§e' + target + '§r]的前十五名为', istell)
 		maxnamelen = 0
 		for i in range(0, min(rank_amount, len(arr))):
 			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
 		for i in range(0, min(rank_amount, len(arr))):
-			print_msg(server, info, '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0])
+			print_msg(server, info, '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0], istell)
 	else:
 		print_msg(server, info, 'usercache.json not found')
 
@@ -164,6 +167,8 @@ def onServerInfo(server, info):
 	content = content.replace('-uuid', '')
 	listbot = content.find('-bot') >= 0
 	content = content.replace('-bot', '')
+	istell = content.find('-tell') >= 0
+	content = content.replace('-tell', '')
 	if not info.isPlayer and content.endswith('<--[HERE]'):
 		content = content.replace('<--[HERE]', '')
 		
@@ -184,11 +189,11 @@ def onServerInfo(server, info):
 	debug_print(server, info, '[isuuid, listbot] = [' + str(isuuid) + ', ' + str(listbot) + ']')
 	if cmdlen == 4 and command[0] == 'query':
 	# !!stats query [玩家] [统计类别] [统计内容] (-uuid)
-		show_stats(server, info, command[1], command[2], command[3], isuuid)
+		show_stats(server, info, command[1], command[2], command[3], isuuid, istell)
 	elif command[0] == 'rank':
 	# !!stats rank [统计类别] [统计内容] (过滤bot前缀)
 		if cmdlen == 3 or cmdlen == 4:
-			show_rank(server, info, command[1], command[2], listbot)
+			show_rank(server, info, command[1], command[2], listbot, istell)
 		else:
 			print_msg(server, info, errmsg_arg)
 	else:
