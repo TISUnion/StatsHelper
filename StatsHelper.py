@@ -20,7 +20,7 @@ help_msg = '''------MCD StatsHelper插件 v1.2------
 §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的§e[统计内容]为§e[物品/方块id]§r
 §6custom§r 的§e[统计内容]§r详见统计信息的json文件
 上述内容无需带minecraft前缀
-§7(-uuid)§r: 用uuid替换玩家名; §7(-bot)§r: 统计bot与cam; §7(-tell)§r仅自己可见
+§7(-uuid)§r: 用uuid替换玩家名; §7(-bot)§r: 统计bot与cam; §7(-tell)§r: 仅自己可见
 §a【例子】§r
 §7''' + prefix + ''' query §bFallen_Breath §6used §ewater_bucket§r
 §7''' + prefix + ''' query §b85dbd009-69ed-3cc4-b6b6-ac1e6d07202e §6killed §ezombie §7-uuid§r
