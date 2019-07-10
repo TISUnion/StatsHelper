@@ -15,8 +15,8 @@ help_msg = '''------MCD StatsHelper插件 v1.2------
 §7''' + prefix + ''' query §b[玩家] §6[统计类别] §e[统计内容] §7(-uuid)§r
 §7''' + prefix + ''' rank §6[统计类别] §e[统计内容] §7(-bot)§r
 §a【参数说明】§r
-§6[统计类别]§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined, §6broken§r, §6crafted§r, §6custom§r
-§6killed§r, §6killed_by§r 的§e[统计内容]§r为 §e[生物id]§r
+§6[统计类别]§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
+§6killed§r, §6killed_by§r 的§e[统计内容]§r为§e[生物id]§r
 §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的§e[统计内容]为§e[物品/方块id]§r
 §6custom§r 的§e[统计内容]§r详见统计信息的json文件
 上述内容无需带minecraft前缀
