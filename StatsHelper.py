@@ -69,7 +69,7 @@ def isBot(name):
 	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#zi_ming#Steve#Alex###########'
 	blackkey = ['farm', 'bot_', 'cam', '_b_', 'bot-']
 	if blacklist.find(name) >= 0: return True
-	if len(name) <= 4 or len(name) > 16: return True
+	if len(name) < 4 or len(name) > 16: return True
 	for i in blackkey:
 		if name.find(i) >= 0:
 			return True
