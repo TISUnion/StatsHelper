@@ -1,205 +1,233 @@
 # -*- coding: utf-8 -*-
 
-import os
 import json
-import imp
+import os
+import urllib2
 import time
 
-PlayerInfoAPI = imp.load_source('PlayerInfoAPI','./plugins/PlayerInfoAPI.py')
-
-SourceWorldPath = '/home/survival-25501/quick/world/'
-DestinationWorldPath = 'server/world/'
-Prefix = '!!region'
-PluginName = 'RegionFileUpdater'
-LogFileFolder = 'plugins/' + PluginName + '/'
-LogFilePath = LogFileFolder + 'log.log'
-Debug_output = 0
-DimensionRegionFolder = {-1: 'DIM-1/region/', 0: 'region/', 1: 'DIM1/region/'}
-HelpMessage = '''------MCD ''' + PluginName + ''' v0.4------
-一个更新本服区域文件至生存服!!qb存档区域文件的插件
-§a【指令说明】§r
-§7''' + Prefix + ''' §r显示帮助信息
-§7''' + Prefix + ''' add §r添加玩家所在位置的区域文件
-§7''' + Prefix + ''' add §6[d] [x] [z] §r添加指定的区域文件
-§7''' + Prefix + ''' del §r删除玩家所在位置的区域文件
-§7''' + Prefix + ''' del §6[d] [x] [z] §r删除指定的区域文件
-§7''' + Prefix + ''' delete-all §r删除所有区域文件
-§7''' + Prefix + ''' list §r列出待更新的区域文件
-§7''' + Prefix + ''' history §r输出上一次update的结果
-§7''' + Prefix + ''' update §r更新列表中的区域文件，这将重启服务器
+ServerPath = 'server/'
+WorldPath = ServerPath + 'world/'
+Prefix = '!!stats'
+ScoreboardName = 'StatsHelper'
+DebugOutput = 0
+RankAmount = 15
+HelpMessage = '''------MCD StatsHelper插件 v2.0------
+一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息。
+§a【格式说明】§r
+§7''' + Prefix + '''§r 显示帮助信息
+§7''' + Prefix + ''' query §b[玩家] §6[统计类别] §e[统计内容] §7(-uuid)§r §7(-tell)§r
+§7''' + Prefix + ''' rank §6[统计类别] §e[统计内容] §7(-bot)§r §7(-tell)§r
+§7''' + Prefix + ''' scoreboard §6[统计类别] §e[统计内容] §7(-bot)§r
+§7''' + Prefix + ''' scoreboard show§r 显示该插件的计分板
+§7''' + Prefix + ''' scoreboard hide§r 隐藏该插件的计分板
 §a【参数说明】§r
-§6[d]§r: 维度序号，主世界为0，下界为-1，末地为1
-§6[x] [z]§r: 区域文件坐标，如r.-3.1.mca的区域文件坐标为x=-3 z=1
+§6[统计类别]§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
+§6killed§r, §6killed_by§r 的 §e[统计内容] §r为 §e[生物id]§r
+§6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §e[统计内容]§r 为 §e[物品/方块id]§r
+§6custom§r 的 §e[统计内容]§r 详见统计信息的json文件
+上述内容无需带minecraft前缀
+§7(-uuid)§r: 用uuid替换玩家名; §7(-bot)§r: 统计bot与cam; §7(-tell)§r: 仅自己可见
+§a【例子】§r
+§7''' + Prefix + ''' query §bFallen_Breath §6used §ewater_bucket§r
+§7''' + Prefix + ''' rank §6custom §etime_since_rest §7-bot§r
+§7''' + Prefix + ''' scoreboard §6mined §estone§r
 '''
 
-regionList = []
-historyList = []
-
-def debug_print(server, info, msg):
-	if Debug_output:
-		printMessage(server, info, '[' + PluginName + ']' + msg)
+def DebugPrint(server, info, msg):
+	if DebugOutput:
+		printMessage(server, info, '[StatsHelper]' + msg)
 		
-def debug_print_list(server, info, msg, lst):
-	if Debug_output:
-		debug_print(server, info, msg)
+def DebugPrintList(server, info, msg, lst):
+	if DebugOutput:
+		DebugPrint(server, info, msg)
 		for i in lst:
-			debug_print(server, info, ' ' + i)
+			DebugPrint(server, info, '    ' + i)
+			
+def name_to_uuid_fromAPI(name):
+	url = 'http://tools.glowingmines.eu/convertor/nick/' + name
+	response = urllib2.urlopen(url)
+	data = response.read()
+	js = json.loads(str(data))
+	return js['offlinesplitteduuid']
+	
+def name_to_uuid(server, info, name):
+	fileName = ServerPath + 'usercache.json'
+	if os.path.isfile(fileName):
+		with open(fileName, 'r') as f:
+			try:
+				js = json.load(f)
+			except ValueError:
+				printMessage(server, info, 'cann\'t open json file '+fileName)
+				return name_to_uuid_fromAPI(name)
+			for i in js:
+				if i['name'] == name:
+					return i['uuid']
+	printMessage(server, info, 'name not found, use API')
+	return name_to_uuid_fromAPI(name)
 
-def printMessage(server, info, msg, istell = True):
+def isBot(name):
+	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#zi_ming#Steve#Alex###########'
+	blackkey = ['farm', 'bot_', 'cam', '_b_', 'bot-']
+	if blacklist.find(name) >= 0: return True
+	if len(name) <= 4 or len(name) > 16: return True
+	for i in blackkey:
+		if name.find(i) >= 0:
+			return True
+	return False
+
+def printMessage(server, info, msg, isTell = True):
 	for line in msg.splitlines():
 		if info.isPlayer:
-			if istell:
+			if isTell:
 				server.tell(info.player, line)
 			else:
 				server.say(line)
 		else:
 			print line
+			
+def getData(server, info, uuid, classification, target):
+	jsonfile = WorldPath + 'stats/' + uuid + '.json'
+	if not os.path.isfile(jsonfile):
+		#printMessage(server, info, '未找到该玩家的统计文件！')
+		return (0, False)
 		
-def printLog(msg):
-	if not os.path.exists(LogFileFolder):
-		os.makedirs(LogFileFolder)
-	if not os.path.exists(LogFilePath):
-		with open(LogFilePath, 'w') as f:
-			pass
-	with open(LogFilePath, 'a') as logfile:
-		logfile.write(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())) + ': ' + msg + '\n')
+	with open(jsonfile, 'r') as f:
+		try:
+			DebugPrint(server, info, 'trying to read ' + jsonfile)
+			js = json.load(f)
+		except ValueError:
+			#printMessage(server, info, '统计文件读取失败')
+			return (0, False)
+		try:
+			data = js['stats']['minecraft:' + classification]['minecraft:' + target]
+		except KeyError:
+			#printMessage(server, info, '未找到该统计项！')
+			return (0, False)
+		return (data, True)
+		
+def getPlayerList(server, info, listBot):
+	fileName = ServerPath + 'usercache.json'
+	ret = []
+	flag = False
+	if os.path.isfile(fileName):
+		with open(fileName, 'r') as f:
+			try:
+				js = json.load(f)
+			except ValueError:
+				#printMessage(server, info, 'cann\'t open json file ' + fileName)
+				return (ret, False)
+			for i in js:
+				name = i['name']
+				if not listBot and isBot(name):
+					continue
+				ret.append((name, i['uuid']))
+		flag = True
+	else:
+		printMessage(server, info, 'usercache.json not found')
+	return (ret, flag)
 	
-def getRegionFilePath(regionfile):
-	path = ''
-	path += DimensionRegionFolder[regionfile[0]]
-	path += 'r.' + str(regionfile[1]) + '.' + str(regionfile[2]) + '.mca'
-	return path
+def triggerSaveAll(server):
+	server.execute('save-all')
+	time.sleep(0.2)
+
+def showStats(server, info, name, classification, target, isUUID, isTell):
+	uuid = name
+	if not isUUID:
+		uuid = name_to_uuid(server, info, uuid)
+	DebugPrint(server, info, 'uuid = ' + uuid)
 	
-def addRegion(server, info, regionFile):
-	global regionList
-	if regionFile in regionList:
-		printMessage(server, info, '列表中已存在该区域文件')
-	else:
-		regionList.append(regionFile)
-		printMessage(server, info, '区域文件§6' + getRegionFilePath(regionFile) + '§r已添加')
+	data = getData(server, info, uuid, classification, target)
+	
+	msg = '玩家§b' + name + '§r的统计信息[§6' + classification + '§r.§e' + target + '§r]的值为§a' + str(data) + '§r'
+	printMessage(server, info, msg, isTell)
 		
-def delRegion(server, info, regionFile):
-	global regionList
-	if not regionFile in regionList:
-		printMessage(server, info, '列表中不存在该区域文件')
-	else:
-		regionList.remove(regionFile)
-		printMessage(server, info, '区域文件§6' + getRegionFilePath(regionFile) + '§r已删除')
-
-def deleteRegionList(server, info):
-	global regionList
-	regionList = []
-	printMessage(server, info, '区域文件列表已清空')
-
-def getRegionFileFromPlayer(server, player):
-	playerInfo = PlayerInfoAPI.getPlayerInfo(server, player)
-	d = playerInfo['Dimension']
-	x = int(playerInfo['Pos'][0]) // 512
-	z = int(playerInfo['Pos'][2]) // 512
-	return (d, x, z)
-
-def getRegionFileFromParameter(p):
-	d = int(p[0])
-	x = int(p[1])
-	z = int(p[2])
-	flag = d in [-1, 0, 1]
-	return ((d, x, z), flag)
-
-def printRegionList(server, info):
-	global regionList
-	printMessage(server, info, '更新列表中共有' + str(len(regionList)) + '个待更新的区域文件')
-	for region in regionList:
-		printMessage(server, info, '§6' + getRegionFilePath(region) + '§r')
-
-def printRegionHistory(server, info):
-	global historyList
-	printMessage(server, info, '上次尝试更新更新了' + str(len(historyList)) + '个区域文件')
-	msg = {False: '失败', True: '成功'}
-	for history in historyList:
-		printMessage(server, info, '§6' + getRegionFilePath(history[0]) + '§r: ' + msg[history[1]])
+def showRank(server, info, classification, target, listBot, isTell):
+	getPlayerListResult = getPlayerList(server, info, listBot)
+	if getPlayerListResult[1]:
+		arr = []
+		for player in getPlayerListResult[0]:
+			ret = getData(server, info, player[1], classification, target)
+			if ret[1] and ret[0] >= 0:
+				data = ret[0]
+				if DebugOutput > 1: DebugPrint(server, info, 'append [' + name + ', ' + str(data) + ']')
+				arr.append((player[0], data))
+	
+		if len(arr) == 0:
+			printMessage(server, info, '未找到该统计项或该统计项全空！')
+			return
+		arr.sort(key = lambda x:x[0])
+		arr.reverse()
+		arr.sort(key = lambda x:x[1])
+		arr.reverse()
 		
-def updateRegionFile(server, info):
-	global regionList
-	global historyList
-	printRegionList(server, info)
-	countdown = 5
-	printMessage(server, info, '[' + PluginName + ']: ' + str(countdown) + '秒后重启服务器更新列表中的区域文件')
-	for i in range(1,countdown):
-		printMessage(server, info, '[' + PluginName + ']: 还有' + str(countdown - i) + '秒')
-		time.sleep(1)
-	server.stop()
-	time.sleep(10)
-	name = ''
-	if (info.isPlayer):
-		name = info.player
+		printMessage(server, info, '统计信息[§6' + classification + '§r.§e' + target + '§r]的前十五名为', isTell)
+		maxnamelen = 0
+		for i in range(0, min(RankAmount, len(arr))):
+			maxnamelen = max(maxnamelen, len(str(arr[i][1])))
+		for i in range(0, min(RankAmount, len(arr))):
+			printMessage(server, info, '#' + str(i + 1) + ' ' * (3-len(str(i + 1))) + str(arr[i][1]) + ' ' * (maxnamelen - len(str(arr[i][1])) + 1) + arr[i][0], isTell)
 	else:
-		name = '控制台'
-	printLog(name + '更新了' + str(len(regionList)) + '个区域文件：')
-	historyList = []
-	for region in regionList:
-		sourceFilePath = SourceWorldPath + getRegionFilePath(region)
-		DestinationFilePath = DestinationWorldPath + DimensionRegionFolder[region[0]]
-		flag = False
-		if (os.path.isfile(sourceFilePath)):
-			print '[' + PluginName + ']cp -f ' + sourceFilePath + ' ' + DestinationFilePath
-			os.system('cp -f ' + sourceFilePath + ' ' + DestinationFilePath);
-			flag = True
-		historyList.append((region, flag))
-		msg = {False: '失败', True: '成功'}
-		printLog(getRegionFilePath(region) + ': ' + msg[flag])
-	regionList = []
-	time.sleep(5)
-	server.start()
+		printMessage(server, info, '玩家列表读取失败')
 
+def showScoreboard(server, info):
+	server.execute('scoreboard objectives setdisplay sidebar ' + ScoreboardName)
+
+def hideScoreboard(server, info):
+	server.execute('scoreboard objectives setdisplay sidebar')
+	
+def buildScoreboard(server, info, classification, target, listBot):
+	getPlayerListResult = getPlayerList(server, info, listBot)
+	if getPlayerListResult[1]:
+		triggerSaveAll(server)
+		server.execute('scoreboard objectives remove ' + ScoreboardName)
+		server.execute('scoreboard objectives add ' + ScoreboardName + ' ' +
+			'minecraft.' + classification + ':minecraft.' + target + 
+			' {"text":"§6' + classification + '§r.§e' + target + '"}')
+		for player in getPlayerListResult[0]:
+			ret = getData(server, info, player[1], classification, target)
+			if ret[1]:
+				server.execute('scoreboard players set ' + player[0] + ' ' + ScoreboardName + ' ' + str(ret[0]))
+		showScoreboard(server, info)
+	else:
+		printMessage(server, info, '玩家列表读取失败')
+		
 def onServerInfo(server, info):
 	content = info.content
+	isUUID = content.find('-uuid') >= 0
+	content = content.replace('-uuid', '')
+	listBot = content.find('-bot') >= 0
+	content = content.replace('-bot', '')
+	isTell = content.find('-tell') >= 0
+	content = content.replace('-tell', '')
 	if not info.isPlayer and content.endswith('<--[HERE]'):
 		content = content.replace('<--[HERE]', '')
 		
 	command = content.split()
 	if command[0] != Prefix:
 		return
-	debug_print(server, info, 'raw content = ' + info.content)
-	debug_print_list(server, info, 'raw command = ' , command)
+	DebugPrint(server, info, 'raw content = ' + info.content)
+	DebugPrintList(server, info, 'raw command = ' , command)
 	del command[0]
 	
 	if len(command) == 0:
 		printMessage(server, info, HelpMessage)
 		return
 	
-	cmdLen = len(command)
-	debug_print_list(server, info, 'processed command = ', command)
-	# add
-	if cmdLen == 1 and command[0] == 'add' and info.isPlayer:
-		addRegion(server, info, getRegionFileFromPlayer(server, info.player))
-	# add [d] [x] [y]
-	elif cmdLen == 4 and command[0] == 'add':
-		ret = getRegionFileFromParameter(command[1:])
-		if (ret[1]):
-			addRegion(server, info, ret[0])
-		else:
-			printMessage(server, info, '区域文件坐标错误！')
-	# delete-all
-	elif cmdLen == 1 and command[0] == 'delete-all' and info.isPlayer:
-		deleteRegionList(server, info)
-	# del
-	elif cmdLen == 1 and command[0] == 'del' and info.isPlayer:
-		delRegion(server, info, getRegionFileFromPlayer(server, info.player))
-	# del [d] [x] [y]
-	elif cmdLen == 4 and command[0] == 'del':
-		ret = getRegionFileFromParameter(command[1:])
-		if (ret[1]):
-			delRegion(server, info, ret[0])
-		else:
-			printMessage(server, info, '区域文件坐标错误！')
-	# list
-	elif cmdLen == 1 and command[0] == 'list':
-		printRegionList(server, info)
-	# history
-	elif cmdLen == 1 and command[0] == 'history':
-		printRegionHistory(server, info)
-	# update
-	elif cmdLen == 1 and command[0] == 'update':
-		updateRegionFile(server, info)
+	
+	cmdlen = len(command)
+	DebugPrintList(server, info, 'processed command = ', command)
+	DebugPrint(server, info, '[isUUID, listBot] = [' + str(isUUID) + ', ' + str(listBot) + ']')
+	# query [玩家] [统计类别] [统计内容] (-uuid)
+	if cmdlen == 4 and command[0] == 'query':
+		showStats(server, info, command[1], command[2], command[3], isUUID, isTell)
+	# rank [统计类别] [统计内容] (过滤bot前缀)
+	elif cmdlen == 3 and command[0] == 'rank':
+		showRank(server, info, command[1], command[2], listBot, isTell)
+	elif cmdlen == 3 and command[0] == 'scoreboard':
+		buildScoreboard(server, info, command[1], command[2], listBot)
+	elif cmdlen == 2 and command[0] == 'scoreboard' and command[1] == 'show':
+		showScoreboard(server, info)
+	elif cmdlen == 2 and command[0] == 'scoreboard' and command[1] == 'hide':
+		hideScoreboard(server, info)
 	else:
-		printMessage(server, info, '参数错误！请输入§7' + Prefix + '§r以获取插件帮助')
+		printMessage(server, info, '参数错误！请输入'+Prefix+'以获取插件帮助')
