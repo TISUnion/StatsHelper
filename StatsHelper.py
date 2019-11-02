@@ -8,8 +8,9 @@ import time
 ServerPath = 'server/'
 WorldPath = ServerPath + 'world/'
 Prefix = '!!stats'
-ScoreboardName = 'StatsHelper'
-UUIDFile = 'uuid.json'
+PluginName = 'StatsHelper'
+ScoreboardName = ScoreboardName
+UUIDFile = 'plugins/' + PluginName + '/uuid.json'
 DebugOutput = 0
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
