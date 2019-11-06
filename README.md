@@ -11,9 +11,9 @@
 
 `!!stats scoreboard` [统计类别] [统计内容] (-bot)
 
-`!!stats scoreboard` show 显示该插件的计分板
+`!!stats scoreboard show` 显示该插件的计分板
 
-`!!stats scoreboard` hide 隐藏该插件的计分板
+`!!stats scoreboard hide` 隐藏该插件的计分板
 # 参数说明
 [统计类别]: killed, killed_by, dropped, picked_up, used, mined, broken, crafted, custom, killed, killed_by 的 [统计内容] 为 [生物id]
 
