@@ -14,7 +14,7 @@ UUIDFile = 'plugins/' + PluginName + '/uuid.json'
 DebugOutput = 0
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
-HelpMessage = '''------MCD StatsHelper插件 v3.0------
+HelpMessage = '''------MCD StatsHelper插件 v3.1------
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息。
 §a【格式说明】§r
 §7''' + Prefix + '''§r 显示帮助信息
@@ -188,20 +188,17 @@ def hideScoreboard(server, info):
 	server.execute('scoreboard objectives setdisplay sidebar')
 	
 def buildScoreboard(server, info, classification, target, listBot):
-	getPlayerListResult = getPlayerList(server, info, listBot)
-	if getPlayerListResult[1]:
-		triggerSaveAll(server)
-		server.execute('scoreboard objectives remove ' + ScoreboardName)
-		server.execute('scoreboard objectives add ' + ScoreboardName + ' ' +
-			'minecraft.' + classification + ':minecraft.' + target + 
-			' {"text":"§6' + classification + '§r.§e' + target + '"}')
-		for player in getPlayerListResult[0]:
-			ret = getStatsData(server, info, player[1], classification, target)
-			if ret[1]:
-				server.execute('scoreboard players set ' + player[0] + ' ' + ScoreboardName + ' ' + str(ret[0]))
-		showScoreboard(server, info)
-	else:
-		printMessage(server, info, '玩家列表读取失败')
+	playerList = getPlayerList(server, info, listBot)
+	triggerSaveAll(server)
+	server.execute('scoreboard objectives remove ' + ScoreboardName)
+	server.execute('scoreboard objectives add ' + ScoreboardName + ' ' +
+		'minecraft.' + classification + ':minecraft.' + target + 
+		' {"text":"§6' + classification + '§r.§e' + target + '"}')
+	for player in playerList:
+		ret = getStatsData(server, info, player[1], classification, target)
+		if ret[1]:
+			server.execute('scoreboard players set ' + player[0] + ' ' + ScoreboardName + ' ' + str(ret[0]))
+	showScoreboard(server, info)
 		
 def onServerInfo(server, info):
 	content = info.content
