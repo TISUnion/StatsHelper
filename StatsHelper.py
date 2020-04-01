@@ -64,7 +64,7 @@ def refreshUUIDList(server, showTip=False):
 	UUID_file = {}
 	UUID_cache = {}
 	if not os.path.isdir(os.path.dirname(UUIDFile)):
-		os.makedirs(UUIDFile)
+		os.makedirs(os.path.dirname(UUIDFile))
 	if os.path.isfile(UUIDFile):
 		UUID_file = json.load(open(UUIDFile, 'r'))
 	fileName = ServerPath + 'usercache.json'
