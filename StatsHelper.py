@@ -2,7 +2,10 @@
 
 import json
 import os
-import urllib2
+try:
+	import urllib2
+except ModuleNotFoundError:
+	import urllib.request as urllib2
 import time
 
 ServerPath = 'server/'
@@ -13,7 +16,7 @@ ScoreboardName = PluginName
 UUIDFile = 'plugins/' + PluginName + '/uuid.json'
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
-HelpMessage = '''------MCD StatsHelper插件 v3.2------
+HelpMessage = '''------MCD StatsHelper插件 v4.0------
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息。
 §a【格式说明】§r
 §7''' + Prefix + '''§r 显示帮助信息
@@ -60,6 +63,8 @@ def refreshUUIDList(server, showTip=False):
 	global UUID
 	UUID_file = {}
 	UUID_cache = {}
+	if not os.path.isdir(os.path.dirname(UUIDFile)):
+		os.makedirs(UUIDFile)
 	if os.path.isfile(UUIDFile):
 		UUID_file = json.load(open(UUIDFile, 'r'))
 	fileName = ServerPath + 'usercache.json'
@@ -267,5 +272,17 @@ def onPlayerJoin(server, playername):
 	refreshUUIDList(server)
 
 
-# onMCDReload
-refreshUUIDList(None)
+# MCDReforged
+
+def on_load(server, old_module):
+	onServerStartup(server)
+
+
+def on_player_joined(server, player):
+	onPlayerJoin(server, player)
+
+
+def on_info(server, info):
+	i = copy.deepcopy(info)
+	i.isPlayer = i.is_player
+	onServerInfo(server, info)
