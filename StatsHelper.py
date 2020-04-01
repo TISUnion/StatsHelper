@@ -285,4 +285,4 @@ def on_player_joined(server, player):
 def on_info(server, info):
 	i = copy.deepcopy(info)
 	i.isPlayer = i.is_player
-	onServerInfo(server, info)
+	onServerInfo(server, i)
