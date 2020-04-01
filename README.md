@@ -1,6 +1,6 @@
 # StatsHelper
 
-一个统计信息助手的MCDaemon插件，可查询/排名/使用计分板列出各类统计信息。
+一个统计信息助手的 MCDaemon 插件，兼容 [MCDaemon](https://github.com/kafuuchino-desu/MCDaemon) 以及 [MCDReforged](https://github.com/Fallen-Breath/MCDReforged)，可查询/排名/使用计分板列出各类统计信息。
 
 # 格式说明
 `!!stats` 显示帮助信息
