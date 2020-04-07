@@ -79,7 +79,7 @@ def refreshUUIDList(server, showTip=False):
 				UUID_cache[i['name']] = i['uuid']
 	UUID = dict(UUID, **dict(UUID_cache, **UUID_file))
 	json.dump(UUID, open(UUIDFile, 'w'))
-	if server != None and showTip:
+	if server is not None and showTip:
 		server.say('UUID列表刷新完成，列表长度为' + str(len(UUID)))
 
 
@@ -95,7 +95,7 @@ def isBot(name):
 
 
 def printMessage(server, info, msg, isTell=True):
-	if server == None:
+	if server is None:
 		print(msg)
 		return
 	for line in msg.splitlines():
@@ -276,6 +276,7 @@ def onPlayerJoin(server, playername):
 
 def on_load(server, old_module):
 	onServerStartup(server)
+	server.add_help_message(Prefix, '查询统计信息并管理计分板')
 
 
 def on_player_joined(server, player):

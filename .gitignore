@@ -1,0 +1,6 @@
+.idea
+fakeserver/
+server/
+test.py
+test.json
+uuid.json

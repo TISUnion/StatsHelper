@@ -5,6 +5,7 @@
 适用版本：1.13以上
 
 # 格式说明
+
 `!!stats` 显示帮助信息
 
 `!!stats query` [玩家] [统计类别] [统计内容] (-uuid) (-tell)
@@ -16,7 +17,9 @@
 `!!stats scoreboard show` 显示该插件的计分板
 
 `!!stats scoreboard hide` 隐藏该插件的计分板
+
 # 参数说明
+
 [统计类别]: killed, killed_by, dropped, picked_up, used, mined, broken, crafted, custom, killed, killed_by 的 [统计内容] 为 [生物id]
 
 picked_up, used, mined, broken, crafted 的 [统计内容] 为 [物品/方块id]
