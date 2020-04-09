@@ -52,7 +52,7 @@ def name_to_uuid_fromAPI(name):
 
 def name_to_uuid(server, info, name):
 	global UUID
-	if UUID.has_key(name):
+	if name in UUID:
 		return UUID[name]
 	printMessage(server, info, 'name not found, use API')
 	UUID[name] = name_to_uuid_fromAPI(name)
