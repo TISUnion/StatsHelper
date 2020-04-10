@@ -16,27 +16,27 @@ ScoreboardName = PluginName
 UUIDFile = 'plugins/' + PluginName + '/uuid.json'
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
-HelpMessage = '''------MCD StatsHelper插件 v4.0------
+HelpMessage = '''------MCD StatsHelper插件 v5.0------
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息。
 §a【格式说明】§r
 §7''' + Prefix + '''§r 显示帮助信息
-§7''' + Prefix + ''' query §b[玩家] §6[统计类别] §e[统计内容] §7(-uuid)§r §7(-tell)§r
-§7''' + Prefix + ''' rank §6[统计类别] §e[统计内容] §7(-bot)§r §7(-tell)§r
-§7''' + Prefix + ''' scoreboard §6[统计类别] §e[统计内容] §7(-bot)§r
+§7''' + Prefix + ''' query §b<玩家> §6<统计类别> §e<统计内容> §7[<-uuid>]§r §7[<-tell>]§r
+§7''' + Prefix + ''' rank §6<统计类别> §e<统计内容> §7[<-bot>]§r §7[<-tell>]§r
+§7''' + Prefix + ''' scoreboard §6<统计类别> §e<统计内容> §2[<标题>] §7[<-bot>]§r
 §7''' + Prefix + ''' scoreboard show§r 显示该插件的计分板
 §7''' + Prefix + ''' scoreboard hide§r 隐藏该插件的计分板
 §7''' + Prefix + ''' refreshUUID§r 刷新玩家UUID列表，插件重载后使用
 §a【参数说明】§r
-§6[统计类别]§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
-§6killed§r, §6killed_by§r 的 §e[统计内容] §r为 §e[生物id]§r
-§6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §e[统计内容]§r 为 §e[物品/方块id]§r
-§6custom§r 的 §e[统计内容]§r 详见统计信息的json文件
+§6<统计类别>§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
+§6killed§r, §6killed_by§r 的 §e<统计内容> §r为 §e<生物id>§r
+§6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §e<统计内容>§r 为 §e<物品/方块id>§r
+§6custom§r 的 §e<统计内容>§r 详见统计信息的json文件
 上述内容无需带minecraft前缀
-§7(-uuid)§r: 用uuid替换玩家名; §7(-bot)§r: 统计bot与cam; §7(-tell)§r: 仅自己可见; §7(-all)§r: 列出所有项
+§7[<-uuid>]§r: 用uuid替换玩家名; §7[<-bot>]§r: 统计bot与cam; §7[<-tell>]§r: 仅自己可见; §7[<-all>]§r: 列出所有项
 §a【例子】§r
 §7''' + Prefix + ''' query §bFallen_Breath §6used §ewater_bucket§r
 §7''' + Prefix + ''' rank §6custom §etime_since_rest §7-bot§r
-§7''' + Prefix + ''' scoreboard §6mined §estone§r
+§7''' + Prefix + ''' scoreboard §6mined §estone§r 挖石榜
 '''
 
 UUID = {}
@@ -69,12 +69,11 @@ def refreshUUIDList(server, showTip=False):
 		UUID_file = json.load(open(UUIDFile, 'r'))
 	fileName = ServerPath + 'usercache.json'
 	if os.path.isfile(fileName):
-		with open(fileName, 'r') as f:
+		with open(fileName, 'r', encoding='utf8') as f:
 			try:
 				js = json.load(f)
 			except ValueError:
-				printMessage(server, info, 'cann\'t open json file ' + fileName)
-				return name_to_uuid_fromAPI(name)
+				return
 			for i in js:
 				UUID_cache[i['name']] = i['uuid']
 	UUID = dict(UUID, **dict(UUID_cache, **UUID_file))
@@ -143,7 +142,7 @@ def triggerSaveAll(server):
 
 
 def getString(classification, target):
-	return '§6' + classification + '§r.§e' + target + '§r'
+	return '§6{}§r.§e{}§r'.format(classification, target)
 
 
 def showStats(server, info, name, classification, target, isUUID, isTell):
@@ -207,13 +206,14 @@ def hideScoreboard(server, info):
 	server.execute('scoreboard objectives setdisplay sidebar')
 
 
-def buildScoreboard(server, info, classification, target, listBot):
+def buildScoreboard(server, info, classification, target, title=None, listBot=False):
 	playerList = getPlayerList(server, info, listBot)
 	triggerSaveAll(server)
 	server.execute('scoreboard objectives remove ' + ScoreboardName)
-	server.execute('scoreboard objectives add ' + ScoreboardName + ' ' +
-				   'minecraft.' + classification + ':minecraft.' + target +
-				   ' {"text":"§6' + classification + '§r.§e' + target + '"}')
+	if title is None:
+		title = getString(classification, target)
+	title = title.replace('\\', '\\\\').replace('"', '\\"')
+	server.execute('scoreboard objectives add {} minecraft.{}:minecraft.{} {"text":"{}"}'.format(ScoreboardName, classification, target, title))
 	for player in playerList:
 		ret = getStatsData(server, info, player[1], classification, target)
 		if ret[1]:
@@ -252,8 +252,9 @@ def onServerInfo(server, info, arg=None):
 	# rank [统计类别] [统计内容] (过滤bot前缀)
 	elif cmdlen == 3 and command[0] == 'rank':
 		return showRank(server, info, command[1], command[2], listBot, isTell, isAll, isCalled)
-	elif cmdlen == 3 and command[0] == 'scoreboard':
-		buildScoreboard(server, info, command[1], command[2], listBot)
+	elif cmdlen in [3, 4] and command[0] == 'scoreboard':
+		title = command[3] if cmdlen == 4 else None
+		buildScoreboard(server, info, command[1], command[2], title=title, listBot=listBot)
 	elif cmdlen == 2 and command[0] == 'scoreboard' and command[1] == 'show':
 		showScoreboard(server, info)
 	elif cmdlen == 2 and command[0] == 'scoreboard' and command[1] == 'hide':
