@@ -160,12 +160,11 @@ def showRank(server, info, classification, target, listBot, isTell, isAll, isCal
 	getPlayerListResult = getPlayerList(server, info, listBot)
 	arr = []
 	sum = 0
-	for player in getPlayerListResult:
-		ret = getStatsData(server, info, player[1], classification, target)
-		if ret[1] and ret[0] > 0:
-			data = ret[0]
-			arr.append((player[0], data))
-			sum += data
+	for name, uuid in getPlayerListResult:
+		value, flag = getStatsData(server, info, uuid, classification, target)
+		if flag and value > 0:
+			arr.append((name, value))
+			sum += value
 
 	if len(arr) == 0:
 		if not isCalled:
@@ -213,11 +212,11 @@ def buildScoreboard(server, info, classification, target, title=None, listBot=Fa
 	if title is None:
 		title = getString(classification, target)
 	title = title.replace('\\', '\\\\').replace('"', '\\"')
-	server.execute('scoreboard objectives add {} minecraft.{}:minecraft.{} {"text":"{}"}'.format(ScoreboardName, classification, target, title))
-	for player in playerList:
-		ret = getStatsData(server, info, player[1], classification, target)
-		if ret[1]:
-			server.execute('scoreboard players set ' + player[0] + ' ' + ScoreboardName + ' ' + str(ret[0]))
+	server.execute('scoreboard objectives add {} minecraft.{}:minecraft.{} {{"text":"{}"}}'.format(ScoreboardName, classification, target, title))
+	for name, uuid in playerList:
+		value, flag = getStatsData(server, info, uuid, classification, target)
+		if flag:
+			server.execute('scoreboard players set {} {} {}'.format(name, ScoreboardName, value))
 	showScoreboard(server, info)
 
 
