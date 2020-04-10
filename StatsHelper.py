@@ -2,6 +2,7 @@
 import copy
 import json
 import os
+import codecs
 try:
 	import urllib2
 except ModuleNotFoundError:
@@ -70,7 +71,7 @@ def refreshUUIDList(server, showTip=False):
 		UUID_file = json.load(open(UUIDFile, 'r'))
 	fileName = ServerPath + 'usercache.json'
 	if os.path.isfile(fileName):
-		with open(fileName, 'r', encoding='utf8') as f:
+		with codecs.open(fileName, 'r', encoding='utf8') as f:
 			try:
 				js = json.load(f)
 			except ValueError:
