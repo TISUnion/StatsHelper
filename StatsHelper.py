@@ -246,6 +246,9 @@ def onServerInfo(server, info, arg=None):
 			printMessage(server, info, HelpMessage)
 		return
 
+	if isCalled:
+		refreshUUIDList(server, False)
+
 	cmdlen = len(command)
 	# query [玩家] [统计类别] [统计内容] (-uuid)
 	if cmdlen == 4 and command[0] == 'query':
@@ -289,3 +292,4 @@ def on_info(server, info):
 	i = copy.deepcopy(info)
 	i.isPlayer = i.is_player
 	onServerInfo(server, i)
+
