@@ -171,7 +171,7 @@ def showRank(server, info, classification, target, listBot, isTell, isAll, isCal
 	if len(arr) == 0:
 		if not isCalled:
 			printMessage(server, info, '未找到该统计项或该统计项全空！')
-		return 'Cannot find stats file'
+		return None
 	arr.sort(key=lambda x: x[0])
 	arr.reverse()
 	arr.sort(key=lambda x: x[1])
