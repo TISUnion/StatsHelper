@@ -1,4 +1,5 @@
-# StatsHelper
+StatsHelper
+-------
 
 一个统计信息助手的  [MCDReforged](https://github.com/Fallen-Breath/MCDReforged) 插件，可查询/排名/使用计分板列出各类统计信息。
 
