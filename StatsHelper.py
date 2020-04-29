@@ -1,33 +1,29 @@
 # -*- coding: utf-8 -*-
-import copy
+import collections
 import json
 import os
 import codecs
-try:
-	import urllib2
-except ModuleNotFoundError:
-	import urllib.request as urllib2
 import time
+from urllib.request import urlopen
 
 ServerPath = 'server/'
-WorldPath = ServerPath + 'world/'
+WorldPath = os.path.join(ServerPath, 'world/')
 Prefix = '!!stats'
 PluginName = 'StatsHelper'
 ScoreboardName = PluginName
-UUIDFile = 'plugins/' + PluginName + '/uuid.json'
+UUIDFile = 'plugins/{}/uuid.json'.format(PluginName)
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
 HelpMessage = '''
-------MCD StatsHelper插件 v5.0------
+------MCDR StatsHelper插件 v6.0------
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息
 §a【格式说明】§r
 §7{0}§r 显示帮助信息
 §7{0} query §b<玩家> §6<统计类别> §e<统计内容> §7[<-uuid>]§r §7[<-tell>]§r
 §7{0} rank §6<统计类别> §e<统计内容> §7[<-bot>]§r §7[<-tell>]§r
 §7{0} scoreboard §6<统计类别> §e<统计内容> §2[<标题>] §7[<-bot>]§r
-§7{0} scoreboard show§r 显示该插件的计分板
-§7{0} scoreboard hide§r 隐藏该插件的计分板
-§7{0} refreshUUID§r 刷新玩家UUID列表，插件重载后使用
+§7{0} scoreboard show/hide§r 显示/隐藏该插件的计分板
+§7{0} add_player §b<玩家名>§r 将指定玩家添加至玩家uuid列表中。将添加盗版uuid
 §a【参数说明】§r
 §6<统计类别>§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
 §6killed§r, §6killed_by§r 的 §e<统计内容> §r为 §e<生物id>§r
@@ -41,255 +37,250 @@ HelpMessage = '''
 §7{0} scoreboard §6mined §estone§r 挖石榜
 '''.strip().format(Prefix)
 
-UUID = {}
+uuid_list = {}
+flag_save_all = False
+flag_unload = False
 
 
 def name_to_uuid_fromAPI(name):
 	url = 'http://tools.glowingmines.eu/convertor/nick/' + name
-	response = urllib2.urlopen(url)
-	data = response.read()
-	js = json.loads(str(data))
+	js = json.loads(urlopen(url).read().decode('utf8'))
 	return js['offlinesplitteduuid']
 
 
-def name_to_uuid(server, info, name):
-	global UUID
-	if name in UUID:
-		return UUID[name]
-	printMessage(server, info, 'name not found, use API')
-	UUID[name] = name_to_uuid_fromAPI(name)
-	return UUID[name]
-
-
-def refreshUUIDList(server, showTip=False):
-	global UUID
-	UUID_file = {}
-	UUID_cache = {}
+def refresh_uuid_list():
+	global uuid_list
+	uuid_file = {}
+	uuid_cache = {}
 	if not os.path.isdir(os.path.dirname(UUIDFile)):
 		os.makedirs(os.path.dirname(UUIDFile))
 	if os.path.isfile(UUIDFile):
-		UUID_file = json.load(open(UUIDFile, 'r'))
-	fileName = ServerPath + 'usercache.json'
-	if os.path.isfile(fileName):
-		with codecs.open(fileName, 'r', encoding='utf8') as f:
+		with open(UUIDFile, 'r') as file:
+			uuid_file = json.load(file)
+	file_name = os.path.join(ServerPath, 'usercache.json')
+	if os.path.isfile(file_name):
+		with codecs.open(file_name, 'r', encoding='utf8') as f:
 			try:
-				js = json.load(f)
+				for item in json.load(f):
+					uuid_cache[item['name']] = item['uuid']
 			except ValueError:
-				return
-			for i in js:
-				UUID_cache[i['name']] = i['uuid']
-	UUID = dict(UUID, **dict(UUID_cache, **UUID_file))
-	json.dump(UUID, open(UUIDFile, 'w'))
-	if server is not None and showTip:
-		server.say('UUID列表刷新完成，列表长度为' + str(len(UUID)))
+				pass
+	uuid_list.update(uuid_cache)
+	uuid_list.update(uuid_file)
+	save_uuid_list()
+
+
+def save_uuid_list():
+	global uuid_list
+	uuid_list = dict(sorted(uuid_list.items(), key=lambda x: x[0].capitalize()))
+	with open(UUIDFile, 'w') as file:
+		json.dump(uuid_list, file, indent=4)
 
 
 def isBot(name):
-	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#zi_ming#Steve#Alex###########'
-	blackkey = ['farm', 'bot_', 'cam', '_b_', 'bot-']
-	if blacklist.find(name) >= 0: return True
-	if len(name) < 4 or len(name) > 16: return True
-	for i in blackkey:
-		if name.find(i) >= 0:
+	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#Steve#Alex###########'
+	black_keys = ['farm', 'bot_', 'cam', '_b_', 'bot-']
+	if blacklist.find(name) >= 0 or len(name) < 4 or len(name) > 16:
+		return True
+	for black_key in black_keys:
+		if name.find(black_key) >= 0:
 			return True
 	return False
 
 
-def printMessage(server, info, msg, isTell=True):
-	if server is None:
-		print(msg)
-		return
+def print_message(server, info, msg, is_tell=True):
 	for line in msg.splitlines():
-		if info.isPlayer:
-			if isTell:
+		if info.is_player:
+			if is_tell:
 				server.tell(info.player, line)
 			else:
 				server.say(line)
 		else:
-			print(line)
+			server.reply(info, line)
 
 
-def getStatsData(server, info, uuid, classification, target):
-	jsonfile = WorldPath + 'stats/' + uuid + '.json'
-	if not os.path.isfile(jsonfile):
-		# printMessage(server, info, '未找到该玩家的统计文件！')
-		return (0, False)
-
-	with open(jsonfile, 'r') as f:
-		try:
-			js = json.load(f)
-		except ValueError:
-			# printMessage(server, info, '统计文件读取失败')
-			return (0, False)
-		try:
-			data = js['stats']['minecraft:' + classification]['minecraft:' + target]
-		except KeyError:
-			# printMessage(server, info, '未找到该统计项！')
-			return (0, False)
-		return (data, True)
+def get_stat_data(uuid, cls, target):
+	try:
+		with open(os.path.join(WorldPath, 'stats', uuid + '.json'), 'r') as f:
+			return json.load(f)['stats']['minecraft:' + cls]['minecraft:' + target]
+	except:
+		return None
 
 
-def getPlayerList(server, info, listBot):
-	global UUID
+def get_player_list(server, info, list_bot):
+	global uuid_list
 	ret = []
-	for i in UUID.items():
-		if listBot or not isBot(i[0]):
+	for i in uuid_list.items():
+		if list_bot or not isBot(i[0]):
 			ret.append(i)
 	return ret
 
 
-def triggerSaveAll(server):
+def trigger_save_all(server):
+	global flag_save_all
+	flag_save_all = False
 	server.execute('save-all')
-	time.sleep(0.2)
+	while not flag_save_all and not flag_unload:
+		time.sleep(0.01)
 
 
-def getString(classification, target):
-	return '§6{}§r.§e{}§r'.format(classification, target)
+def get_display_text(cls, target):
+	return '§6{}§r.§e{}§r'.format(cls, target)
 
 
-def showStats(server, info, name, classification, target, isUUID, isTell):
-	uuid = name
-	if not isUUID:
-		uuid = name_to_uuid(server, info, uuid)
-
-	data = getStatsData(server, info, uuid, classification, target)
-
-	msg = '玩家§b' + name + '§r的统计信息[' + getString(classification, target) + ']的值为§a' + str(data) + '§r'
-	printMessage(server, info, msg, isTell)
+def show_stat(server, info, name, cls, target, is_uuid, is_tell):
+	global uuid_list
+	uuid = name if is_uuid else uuid_list.get(name, None)
+	if uuid is None:
+		print_message(server, info, '玩家{}的uuid不在储存列表中'.format(name), is_tell)
+	msg = '玩家§b{}§r的统计信息[{}]的值为§a{}§r'.format(name, get_display_text(cls, target), get_stat_data(uuid, cls, target))
+	print_message(server, info, msg, is_tell)
 
 
-def showRank(server, info, classification, target, listBot, isTell, isAll, isCalled=False):
-	getPlayerListResult = getPlayerList(server, info, listBot)
+def show_rank(server, info, cls, target, list_bot, is_tell, is_all, is_called=False):
+	player_list = get_player_list(server, info, list_bot)
 	arr = []
 	sum = 0
-	for name, uuid in getPlayerListResult:
-		value, flag = getStatsData(server, info, uuid, classification, target)
-		if flag and value > 0:
-			arr.append((name, value))
+	for name, uuid in player_list:
+		value = get_stat_data(uuid, cls, target)
+		if value is not None:
+			arr.append(collections.namedtuple('T', 'name value')(name, value))
 			sum += value
 
 	if len(arr) == 0:
-		if not isCalled:
-			printMessage(server, info, '未找到该统计项或该统计项全空！')
+		if not is_called:
+			print_message(server, info, '未找到该统计项或该统计项全空！')
 		return None
-	arr.sort(key=lambda x: x[0])
-	arr.reverse()
-	arr.sort(key=lambda x: x[1])
-	arr.reverse()
+	arr.sort(key=lambda x: x.name, reverse=True)
+	arr.sort(key=lambda x: x.value, reverse=True)
 
-	showRange = min(RankAmount + isAll * len(arr), len(arr))
-	if not isCalled:
-		printMessage(server, info,
-					 '统计信息[{}]的总数为§c{}§r，前{}名为'.format(getString(classification, target), str(sum), str(showRange)),
-					 isTell)
-	ret = ['{}.{}'.format(classification, target)]
+	show_range = min(RankAmount + is_all * len(arr), len(arr))
+	if not is_called:
+		print_message(
+			server, info,
+			'统计信息[{}]的总数为§c{}§r，前{}名为'.format(get_display_text(cls, target), sum, show_range),
+			is_tell
+		)
+	ret = ['{}.{}'.format(cls, target)]
 
-	maxNameLength = 0
-	for i in range(0, showRange):
-		maxNameLength = max(maxNameLength, len(str(arr[i][1])))
-	for i in range(0, showRange):
-		s = '#' + str(i + 1) + ' ' * (1 if isCalled else 4 - len(str(i + 1))) + \
-			  str(arr[i][1]) + ' ' * (1 if isCalled else maxNameLength - len(str(arr[i][1])) + 2) + \
-			  str(arr[i][0])
-		ret.append(s)
-		if not isCalled:
-			printMessage(server, info, rankColor[min(i, len(rankColor) - 1)] + s, isTell)
+	max_name_length = max([len(str(data.name)) for data in arr])
+	for i in range(show_range):
+		text = '#{}{}{}{}{}'.format(
+			i + 1,
+			' ' * (1 if is_called else 4 - len(str(i + 1))),
+			arr[i].name,
+			' ' * (1 if is_called else max_name_length - len(arr[i].name) + 2),
+			arr[i].value
+		)
+		ret.append(text)
+		if not is_called:
+			print_message(server, info, rankColor[min(i, len(rankColor) - 1)] + text, is_tell)
 
 	ret.append('Total: ' + str(sum))
 	return '\n'.join(ret)
 
 
-def showScoreboard(server, info):
+def show_scoreboard(server):
 	server.execute('scoreboard objectives setdisplay sidebar ' + ScoreboardName)
 
 
-def hideScoreboard(server, info):
+def hide_scoreboard(server):
 	server.execute('scoreboard objectives setdisplay sidebar')
 
 
-def buildScoreboard(server, info, classification, target, title=None, listBot=False):
-	playerList = getPlayerList(server, info, listBot)
-	triggerSaveAll(server)
+def build_scoreboard(server, info, cls, target, title=None, list_bot=False):
+	player_list = get_player_list(server, info, list_bot)
+	trigger_save_all(server)
 	server.execute('scoreboard objectives remove ' + ScoreboardName)
 	if title is None:
-		title = getString(classification, target)
-	title = title.replace('\\', '\\\\').replace('"', '\\"')
-	server.execute('scoreboard objectives add {} minecraft.{}:minecraft.{} {{"text":"{}"}}'.format(ScoreboardName, classification, target, title))
-	for name, uuid in playerList:
-		value, flag = getStatsData(server, info, uuid, classification, target)
-		if flag:
+		title = get_display_text(cls, target)
+	title = json.dumps({'text': title})
+	server.execute('scoreboard objectives add {} minecraft.{}:minecraft.{} {}'.format(ScoreboardName, cls, target, title))
+	for name, uuid in player_list:
+		value = get_stat_data(uuid, cls, target)
+		if value is not None:
 			server.execute('scoreboard players set {} {} {}'.format(name, ScoreboardName, value))
-	showScoreboard(server, info)
+	show_scoreboard(server)
 
 
-def onServerInfo(server, info, arg=None):
-	isCalled = arg != None
-	content = arg if isCalled else info.content
-	isUUID = content.find('-uuid') >= 0
+def add_player_to_uuid_list(server, info, player):
+	global uuid_list
+	if player in uuid_list:
+		server.reply(info, '玩家{}已在列表中'.format(player))
+		return
+	try:
+		uuid = name_to_uuid_fromAPI(player)
+	except:
+		server.reply(info, '无法获得玩家{}的uuid'.format(player))
+		raise
+	else:
+		uuid_list[player] = uuid
+		save_uuid_list()
+		server.reply(info, '玩家{}添加成功, uuid为{}'.format(player, uuid))
+
+
+def on_info(server, info, arg=None):
+	is_called = arg is not None
+	if not is_called and not info.is_user:
+		if info.content == 'Saved the game':
+			global flag_save_all
+			flag_save_all = True
+		return
+	content = arg if is_called else info.content
+	is_uuid = content.find('-uuid') >= 0
+	list_bot = content.find('-bot') >= 0
+	is_tell = content.find('-tell') >= 0
+	is_all = content.find('-all') >= 0
 	content = content.replace('-uuid', '')
-	listBot = content.find('-bot') >= 0
 	content = content.replace('-bot', '')
-	isTell = content.find('-tell') >= 0
 	content = content.replace('-tell', '')
-	isAll = content.find('-all') >= 0
 	content = content.replace('-all', '')
-	if not isCalled and not info.isPlayer and content.endswith('<--[HERE]'):
-		content = content.replace('<--[HERE]', '')
 
 	command = content.split()
 	if len(command) == 0 or command[0] != Prefix:
 		return
-	del command[0]
 
-	if len(command) == 0:
-		if not isCalled:
-			printMessage(server, info, HelpMessage)
+	if len(command) == 1:
+		if not is_called:
+			print_message(server, info, HelpMessage)
 		return
 
-	if isCalled:
-		refreshUUIDList(server, False)
-
+	refresh_uuid_list()
 	cmdlen = len(command)
-	# query [玩家] [统计类别] [统计内容] (-uuid)
-	if cmdlen == 4 and command[0] == 'query':
-		showStats(server, info, command[1], command[2], command[3], isUUID, isTell)
-	# rank [统计类别] [统计内容] (过滤bot前缀)
-	elif cmdlen == 3 and command[0] == 'rank':
-		return showRank(server, info, command[1], command[2], listBot, isTell, isAll, isCalled)
-	elif cmdlen in [3, 4] and command[0] == 'scoreboard':
-		title = command[3] if cmdlen == 4 else None
-		buildScoreboard(server, info, command[1], command[2], title=title, listBot=listBot)
-	elif cmdlen == 2 and command[0] == 'scoreboard' and command[1] == 'show':
-		showScoreboard(server, info)
-	elif cmdlen == 2 and command[0] == 'scoreboard' and command[1] == 'hide':
-		hideScoreboard(server, info)
-	elif cmdlen == 1 and command[0] == 'refreshUUID':
-		refreshUUIDList(server, True)
+
+	# !!stats query [玩家] [统计类别] [统计内容] (-uuid)
+	if cmdlen == 5 and command[1] == 'query':
+		show_stat(server, info, command[2], command[3], command[4], is_uuid, is_tell)
+
+	# !!stats rank [统计类别] [统计内容] (过滤bot前缀)
+	elif cmdlen == 4 and command[1] == 'rank':
+		return show_rank(server, info, command[2], command[3], list_bot, is_tell, is_all, is_called)
+
+	# !!stats scoreboard [统计类别] [统计内容] [<标题>] (过滤bot前缀)
+	elif cmdlen in [4, 5] and command[1] == 'scoreboard':
+		title = command[4] if cmdlen == 5 else None
+		build_scoreboard(server, info, command[2], command[3], title=title, list_bot=list_bot)
+
+	# !!stats scoreboard show
+	elif cmdlen == 3 and command[1] == 'scoreboard' and command[2] == 'show':
+		show_scoreboard(server)
+
+	# !!stats scoreboard hide
+	elif cmdlen == 3 and command[1] == 'scoreboard' and command[2] == 'hide':
+		hide_scoreboard(server)
+
+	# !!stats add_player [玩家名]
+	elif cmdlen == 3 and command[1] == 'add_player':
+		add_player_to_uuid_list(server, info, command[2])
+
 	else:
-		printMessage(server, info, '参数错误！请输入' + Prefix + '以获取插件帮助')
+		print_message(server, info, '参数错误！请输入{}以获取插件帮助'.format(Prefix))
 
 
-def onServerStartup(server):
-	refreshUUIDList(server)
+def on_unload(server):
+	global flag_unload
+	flag_unload = True
 
-
-def onPlayerJoin(server, playername):
-	refreshUUIDList(server)
-
-
-# MCDReforged
 
 def on_load(server, old_module):
-	onServerStartup(server)
 	server.add_help_message(Prefix, '查询统计信息并管理计分板')
-
-
-def on_player_joined(server, player):
-	onPlayerJoin(server, player)
-
-
-def on_info(server, info):
-	i = copy.deepcopy(info)
-	i.isPlayer = i.is_player
-	onServerInfo(server, i)
-
