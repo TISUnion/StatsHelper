@@ -10,7 +10,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.0.0',
+	'version': '6.1.0',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -63,23 +63,32 @@ def name_to_uuid_fromAPI(name):
 
 def refresh_uuid_list():
 	global uuid_list
-	uuid_file = {}
 	uuid_cache = {}
+	uuid_file = {}
 	if not os.path.isdir(os.path.dirname(UUIDFile)):
 		os.makedirs(os.path.dirname(UUIDFile))
 	if os.path.isfile(UUIDFile):
 		with open(UUIDFile, 'r') as file:
 			uuid_file = json.load(file)
+	uuid_cache_time = {}
 	file_name = os.path.join(ServerPath, 'usercache.json')
 	if os.path.isfile(file_name):
 		with codecs.open(file_name, 'r', encoding='utf8') as f:
 			try:
 				for item in json.load(f):
-					uuid_cache[item['name']] = item['uuid']
+					player, uuid = item['name'], item['uuid']
+					expired_time = time.strptime(item['expiresOn'].rsplit(' ', 1)[0], '%Y-%m-%d %X')
+					if player in uuid_cache:
+						flag = expired_time > uuid_cache_time[player]
+					else:
+						flag = True
+					if flag:
+						uuid_cache[player] = uuid
+						uuid_cache_time[player] = expired_time
 			except ValueError:
 				pass
-	uuid_list.update(uuid_cache)
 	uuid_list.update(uuid_file)
+	uuid_list.update(uuid_cache)
 	save_uuid_list()
 
 
@@ -261,36 +270,39 @@ def on_info(server, info: Info, arg=None):
 			print_message(server, info, HelpMessage)
 		return
 
-	refresh_uuid_list()
 	cmdlen = len(command)
 
-	# !!stats query [玩家] [统计类别] [统计内容] (-uuid)
-	if cmdlen == 5 and command[1] == 'query':
-		show_stat(server, info, command[2], command[3], command[4], is_uuid, is_tell)
+	@new_thread(PLUGIN_METADATA['id'])
+	def inner():
+		# !!stats query [玩家] [统计类别] [统计内容] (-uuid)
+		if cmdlen == 5 and command[1] == 'query':
+			show_stat(server, info, command[2], command[3], command[4], is_uuid, is_tell)
 
-	# !!stats rank [统计类别] [统计内容] (过滤bot前缀)
-	elif cmdlen == 4 and command[1] == 'rank':
-		return show_rank(server, info, command[2], command[3], list_bot, is_tell, is_all, is_called)
+		# !!stats rank [统计类别] [统计内容] (过滤bot前缀)
+		elif cmdlen == 4 and command[1] == 'rank':
+			return show_rank(server, info, command[2], command[3], list_bot, is_tell, is_all, is_called)
 
-	# !!stats scoreboard [统计类别] [统计内容] [<标题>] (过滤bot前缀)
-	elif cmdlen in [4, 5] and command[1] == 'scoreboard':
-		title = command[4] if cmdlen == 5 else None
-		build_scoreboard(server, info, command[2], command[3], title=title, list_bot=list_bot)
+		# !!stats scoreboard [统计类别] [统计内容] [<标题>] (过滤bot前缀)
+		elif cmdlen in [4, 5] and command[1] == 'scoreboard':
+			title = command[4] if cmdlen == 5 else None
+			build_scoreboard(server, info, command[2], command[3], title=title, list_bot=list_bot)
 
-	# !!stats scoreboard show
-	elif cmdlen == 3 and command[1] == 'scoreboard' and command[2] == 'show':
-		show_scoreboard(server)
+		# !!stats scoreboard show
+		elif cmdlen == 3 and command[1] == 'scoreboard' and command[2] == 'show':
+			show_scoreboard(server)
 
-	# !!stats scoreboard hide
-	elif cmdlen == 3 and command[1] == 'scoreboard' and command[2] == 'hide':
-		hide_scoreboard(server)
+		# !!stats scoreboard hide
+		elif cmdlen == 3 and command[1] == 'scoreboard' and command[2] == 'hide':
+			hide_scoreboard(server)
 
-	# !!stats add_player [玩家名]
-	elif cmdlen == 3 and command[1] == 'add_player':
-		add_player_to_uuid_list(server, info, command[2])
+		# !!stats add_player [玩家名]
+		elif cmdlen == 3 and command[1] == 'add_player':
+			add_player_to_uuid_list(server, info, command[2])
 
-	else:
-		print_message(server, info, '参数错误！请输入{}以获取插件帮助'.format(Prefix))
+		else:
+			print_message(server, info, '参数错误！请输入{}以获取插件帮助'.format(Prefix))
+
+	inner()
 
 
 def on_unload(server):
@@ -298,5 +310,11 @@ def on_unload(server):
 	flag_unload = True
 
 
+def on_player_joined(server, player, info):
+	refresh_uuid_list()
+
+
 def on_load(server: ServerInterface, old_module):
 	server.register_help_message(Prefix, '查询统计信息并管理计分板')
+	refresh_uuid_list()
+	server.logger.info('UUID list size: {}'.format(len(uuid_list)))
