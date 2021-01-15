@@ -1,21 +1,34 @@
-# -*- coding: utf-8 -*-
+import codecs
 import collections
 import json
 import os
-import codecs
+import re
 import time
 from urllib.request import urlopen
 
-ServerPath = 'server/'
-WorldPath = os.path.join(ServerPath, 'world/')
+from mcdreforged.api.all import *
+
+PLUGIN_METADATA = {
+	'id': 'stats_helper',
+	'version': '6.0.0',
+	'name': 'Stats helper',
+	'description': 'A Minecraft statistic helper',
+	'author': [
+		'Fallen_Breath'
+	],
+	'link': 'https://github.com/TISUnion/StatsHelper'
+}
+
+ServerPath = 'server'
+WorldPath = os.path.join(ServerPath, 'world')
 Prefix = '!!stats'
 PluginName = 'StatsHelper'
 ScoreboardName = PluginName
-UUIDFile = 'plugins/{}/uuid.json'.format(PluginName)
+UUIDFile = os.path.join('plugins', PluginName, 'uuid.json')
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
 HelpMessage = '''
-------MCDR StatsHelper插件 v6.0------
+------MCDR {1} 插件 v{2}------
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息
 §a【格式说明】§r
 §7{0}§r 显示帮助信息
@@ -35,7 +48,7 @@ HelpMessage = '''
 §7{0} query §bFallen_Breath §6used §ewater_bucket§r
 §7{0} rank §6custom §etime_since_rest §7-bot§r
 §7{0} scoreboard §6mined §estone§r 挖石榜
-'''.strip().format(Prefix)
+'''.strip().format(Prefix, PLUGIN_METADATA['name'], PLUGIN_METADATA['version'])
 
 uuid_list = {}
 flag_save_all = False
@@ -77,13 +90,14 @@ def save_uuid_list():
 		json.dump(uuid_list, file, indent=4)
 
 
-def isBot(name):
-	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#Steve#Alex###########'
-	black_keys = ['farm', 'bot_', 'cam', '_b_', 'bot-']
+def isBot(name: str):
+	name = name.upper()
+	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#Steve#Alex#DuperMaster#Nya_Vanilla#Witch#Klio_5#######'.upper()
+	black_keys = [r'farm', r'bot_', r'cam', r'_b_', r'bot-', r'bot\d', r'^bot']
 	if blacklist.find(name) >= 0 or len(name) < 4 or len(name) > 16:
 		return True
 	for black_key in black_keys:
-		if name.find(black_key) >= 0:
+		if re.search(black_key.upper(), name):
 			return True
 	return False
 
@@ -219,7 +233,7 @@ def add_player_to_uuid_list(server, info, player):
 		server.reply(info, '玩家{}添加成功, uuid为{}'.format(player, uuid))
 
 
-def on_info(server, info, arg=None):
+def on_info(server, info: Info, arg=None):
 	is_called = arg is not None
 	if not is_called and not info.is_user:
 		if info.content == 'Saved the game':
@@ -239,6 +253,8 @@ def on_info(server, info, arg=None):
 	command = content.split()
 	if len(command) == 0 or command[0] != Prefix:
 		return
+
+	info.cancel_send_to_server()
 
 	if len(command) == 1:
 		if not is_called:
@@ -282,5 +298,5 @@ def on_unload(server):
 	flag_unload = True
 
 
-def on_load(server, old_module):
-	server.add_help_message(Prefix, '查询统计信息并管理计分板')
+def on_load(server: ServerInterface, old_module):
+	server.register_help_message(Prefix, '查询统计信息并管理计分板')
