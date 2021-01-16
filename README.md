@@ -3,7 +3,7 @@ StatsHelper
 
 一个统计信息助手的  [MCDReforged](https://github.com/Fallen-Breath/MCDReforged) 插件，可查询/排名/使用计分板列出各类统计信息。
 
-适用版本：1.13以上盗版服务器
+适用版本：1.13以上服务器
 
 # 格式说明
 

@@ -3,6 +3,7 @@ import collections
 import json
 import os
 import re
+import shutil
 import time
 from urllib.request import urlopen
 
@@ -10,7 +11,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.1.0',
+	'version': '6.1',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -24,7 +25,8 @@ WorldPath = os.path.join(ServerPath, 'world')
 Prefix = '!!stats'
 PluginName = 'StatsHelper'
 ScoreboardName = PluginName
-UUIDFile = os.path.join('plugins', PluginName, 'uuid.json')
+UUIDFile = os.path.join('config', PluginName, 'uuid.json')
+UUIDFilePrev = os.path.join('plugins', PluginName, 'uuid.json')
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
 HelpMessage = '''
@@ -50,7 +52,7 @@ HelpMessage = '''
 §7{0} scoreboard §6mined §estone§r 挖石榜
 '''.strip().format(Prefix, PLUGIN_METADATA['name'], PLUGIN_METADATA['version'])
 
-uuid_list = {}
+uuid_list = {}  # player -> uuid
 flag_save_all = False
 flag_unload = False
 
@@ -61,15 +63,23 @@ def name_to_uuid_fromAPI(name):
 	return js['offlinesplitteduuid']
 
 
-def refresh_uuid_list():
+def refresh_uuid_list(server: ServerInterface):
 	global uuid_list
 	uuid_cache = {}
 	uuid_file = {}
+
+	# compatibility
+	if os.path.isfile(UUIDFilePrev):
+		with open(UUIDFilePrev, 'r') as file:
+			uuid_file.update(json.load(file))
+		server.logger.info('Migrated {} uuid mapping from the previous {}'.format(len(uuid_file), os.path.basename(UUIDFilePrev)))
+	# compatibility ends
+
 	if not os.path.isdir(os.path.dirname(UUIDFile)):
 		os.makedirs(os.path.dirname(UUIDFile))
 	if os.path.isfile(UUIDFile):
 		with open(UUIDFile, 'r') as file:
-			uuid_file = json.load(file)
+			uuid_file.update(json.load(file))
 	uuid_cache_time = {}
 	file_name = os.path.join(ServerPath, 'usercache.json')
 	if os.path.isfile(file_name):
@@ -90,6 +100,10 @@ def refresh_uuid_list():
 	uuid_list.update(uuid_file)
 	uuid_list.update(uuid_cache)
 	save_uuid_list()
+
+	# compatibility
+	if os.path.isdir(os.path.dirname(UUIDFilePrev)):
+		shutil.rmtree(os.path.dirname(UUIDFilePrev))
 
 
 def save_uuid_list():
@@ -311,10 +325,10 @@ def on_unload(server):
 
 
 def on_player_joined(server, player, info):
-	refresh_uuid_list()
+	refresh_uuid_list(server)
 
 
 def on_load(server: ServerInterface, old_module):
 	server.register_help_message(Prefix, '查询统计信息并管理计分板')
-	refresh_uuid_list()
+	refresh_uuid_list(server)
 	server.logger.info('UUID list size: {}'.format(len(uuid_list)))
