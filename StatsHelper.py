@@ -125,15 +125,17 @@ def isBot(name: str):
 	return False
 
 
-def print_message(server, info, msg, is_tell=True):
+def print_message(server, info, msg, is_tell=True, is_raw=False):
+	if not is_raw:
+		msg = '{"text": "' + msg.replace("\n", "\\n") + '"}'
 	for line in msg.splitlines():
 		if info.is_player:
 			if is_tell:
-				server.tell(info.player, line)
+				server.execute("tellraw {} {}".format(info.player, msg))
 			else:
-				server.say(line)
+				server.execute("tellraw @a {}".format(msg))
 		else:
-			server.reply(info, line)
+			server.execute("tellraw {} {}".format(info.player, msg))
 
 
 def get_stat_data(uuid, cls, target):
@@ -162,16 +164,29 @@ def trigger_save_all(server):
 
 
 def get_display_text(cls, target):
-	return '§6{}§r.§e{}§r'.format(cls, target)
+	j = []
+	if cls in ["broken", "crafted", "dropped", "mined", "pick_up", "used"]:  # 物品
+		j.append({"translate": "stat_type.minecraft." + cls, "color": "gold"})
+		j.append({"text": ".", "color": "reset"})
+		j.append({"translate": "item.minecraft." + target, "color": "yellow"})
+	elif cls in ["killed", "killed_by"]:  # 生物
+		j.append({"translate": "stat_type.minecraft." + cls, "color": "gold"})
+		j.append({"text": ".", "color": "reset"})
+		j.append({"translate": "entity.minecraft." + target, "color": "yellow"})
+	else:  # 未知类型
+		j.append({"text": "§6{}§r.§e{}§r".format(cls, target)})
+	return json.dumps(j)
 
 
 def show_stat(server, info, name, cls, target, is_uuid, is_tell):
 	global uuid_list
 	uuid = name if is_uuid else uuid_list.get(name, None)
 	if uuid is None:
-		print_message(server, info, '玩家{}的uuid不在储存列表中'.format(name), is_tell)
-	msg = '玩家§b{}§r的统计信息[{}]的值为§a{}§r'.format(name, get_display_text(cls, target), get_stat_data(uuid, cls, target))
-	print_message(server, info, msg, is_tell)
+		print_message(server, info, '玩家{}的uuid不在储存列表中'.format(name), is_tell, False)
+		return
+	msg = '[{"text": "玩家§b{}§r的统计信息["}, {}, {"text": "]的值为§a{}§r"}]'.format(name, get_display_text(cls, target),
+	                                                                        get_stat_data(uuid, cls, target))
+	print_message(server, info, msg, is_tell, True)
 
 
 def show_rank(server, info, cls, target, list_bot, is_tell, is_all, is_called=False):
@@ -186,7 +201,7 @@ def show_rank(server, info, cls, target, list_bot, is_tell, is_all, is_called=Fa
 
 	if len(arr) == 0:
 		if not is_called:
-			print_message(server, info, '未找到该统计项或该统计项全空！')
+		    print_message(server, info, '未找到该统计项或该统计项全空！')
 		return None
 	arr.sort(key=lambda x: x.name, reverse=True)
 	arr.sort(key=lambda x: x.value, reverse=True)
@@ -195,8 +210,12 @@ def show_rank(server, info, cls, target, list_bot, is_tell, is_all, is_called=Fa
 	if not is_called:
 		print_message(
 			server, info,
-			'统计信息[{}]的总数为§c{}§r，前{}名为'.format(get_display_text(cls, target), sum, show_range),
-			is_tell
+			json.dumps([
+				{"text": "统计信息["},
+				get_display_text(cls, target),
+				{"text": "]的总数为§c{}§r，前{}名为".format(sum, show_range)}
+			]),
+			is_tell, True
 		)
 	ret = ['{}.{}'.format(cls, target)]
 
@@ -231,8 +250,10 @@ def build_scoreboard(server, info, cls, target, title=None, list_bot=False):
 	server.execute('scoreboard objectives remove ' + ScoreboardName)
 	if title is None:
 		title = get_display_text(cls, target)
-	title = json.dumps({'text': title})
-	server.execute('scoreboard objectives add {} minecraft.{}:minecraft.{} {}'.format(ScoreboardName, cls, target, title))
+	else:
+		title = json.dumps({'text': title})
+	server.execute(
+		'scoreboard objectives add {} minecraft.{}:minecraft.{} {}'.format(ScoreboardName, cls, target, title))
 	for name, uuid in player_list:
 		value = get_stat_data(uuid, cls, target)
 		if value is not None:
