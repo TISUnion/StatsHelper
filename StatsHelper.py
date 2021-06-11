@@ -13,7 +13,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.2-alpha3',
+	'version': '6.2-alpha4',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -360,16 +360,20 @@ def rm_scoreboard(server, info, alias):
 def list_saved_scoreboard(server, info, is_tell):
 	saved_list = stored.list_scoreboard()
 	print_text = RTextList()
-	print_text.append('已保存的快速访问统计项如下: \n')
+	print_text.append('已保存的快速访问统计项如下: ' + RText('[+]', color = RColor.green).c(RAction.suggest_command, f'{Prefix} save ').h('点此§a添加§r一个快速访问计分项') + '\n')
 	num = 0
-	for s in saved_list:
-		num += 1
-		display = '统计§6类别§r/§e规则§r: ' + get_display_text(s.cls, s.target)
-		if s.title is not None:
-			display += f' §2标题§r: {s.title}'
-		print_text.append(RText(f'[§7{num}§r] §d{s.alias}§r {display}').c(RAction.run_command, f'{Prefix} {s.alias}').h(f'点击以显示计分板{s.alias}'))
-		if num < len(saved_list):
-			print_text.append('\n')
+	if len(saved_list) == 0:
+		print_text.append('§e还没有保存快速访问计分项呢, 点击上方绿色加号添加一个吧§r')
+	else: 
+		for s in saved_list:
+			num += 1
+			display = '统计§6类别§r/§e规则§r: ' + get_display_text(s.cls, s.target)
+			if s.title is not None:
+				display += f' §2标题§r: {s.title}'
+			print_text.append(RText('[x] ', RColor.dark_red).c(RAction.suggest_command, f'{Prefix} del {s.alias}').h(f'点此§4删除§r快速访问计分项§d{s.alias}§r') + 
+				RText(f'[§7{num}§r] §d{s.alias}§r {display}').c(RAction.run_command, f'{Prefix} {s.alias}').h(f'点击以§a显示§r计分板§d{s.alias}§r'))
+			if num < len(saved_list):
+				print_text.append('\n')
 	print_message(server, info, print_text, is_tell)
 
 
