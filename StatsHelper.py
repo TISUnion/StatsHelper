@@ -5,13 +5,15 @@ import os
 import re
 import shutil
 import time
+from typing import Optional, List
 from urllib.request import urlopen
+from threading import RLock
 
 from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.1',
+	'version': '6.2-alpha1',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -27,6 +29,7 @@ PluginName = 'StatsHelper'
 ScoreboardName = PluginName
 UUIDFile = os.path.join('config', PluginName, 'uuid.json')
 UUIDFilePrev = os.path.join('plugins', PluginName, 'uuid.json')
+SavedScoreboardFile = os.path.join('config', PluginName, 'saved_scoreboard.json')
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
 HelpMessage = '''
@@ -34,15 +37,21 @@ HelpMessage = '''
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息
 §a【格式说明】§r
 §7{0}§r 显示帮助信息
-§7{0} query §b<玩家> §6<统计类别> §e<统计内容> §7[<-uuid>]§r §7[<-tell>]§r
+§7{0}§r §d<统计项代名> §7[<-bot>]§r 快速调出一个保存的计分板
+§7{0} list §7[<-tell>] §r列出已保存的计分板
+§7{0} save §d<计分项代名> §6<统计类别> §e<统计内容> §2[<标题>]§r 保存快速计分
+§7{0} del §d<计分项代名> §r删除一个快速访问计分项 
+§7{0} query §b<玩家> §6<统计类别> §e<统计内容> §7[<-uuid>]§r §7[<-tell>]§d
 §7{0} rank §6<统计类别> §e<统计内容> §7[<-bot>]§r §7[<-tell>]§r
 §7{0} scoreboard §6<统计类别> §e<统计内容> §2[<标题>] §7[<-bot>]§r
-§7{0} scoreboard show/hide§r 显示/隐藏该插件的计分板
+§7{0} scoreboard show§r 显示该插件的计分板
+§7{0} scoreboard hide§r 隐藏该插件的计分板
 §7{0} add_player §b<玩家名>§r 将指定玩家添加至玩家uuid列表中。将添加盗版uuid
 §a【参数说明】§r
+§d<统计项代名>§r: 可以使用§7{0} list§r查询有效的代名, 此外§7{0} query§r/§7rank§f中的§6<统计类别>§r §e<统计内容>§f可以使用§d<统计项代名>§f替代
 §6<统计类别>§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
 §6killed§r, §6killed_by§r 的 §e<统计内容> §r为 §e<生物id>§r
-§6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §e<统计内容>§r 为 §e<物品/方块id>§r
+§6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §6<统计类别>§r 为 §e<物品/方块id>§r
 §6custom§r 的 §e<统计内容>§r 详见统计信息的json文件
 上述内容无需带minecraft前缀
 §7[<-uuid>]§r: 用uuid替换玩家名; §7[<-bot>]§r: 统计bot与cam; §7[<-tell>]§r: 仅自己可见; §7[<-all>]§r: 列出所有项
@@ -55,6 +64,83 @@ HelpMessage = '''
 uuid_list = {}  # player -> uuid
 flag_save_all = False
 flag_unload = False
+Scoreboard = collections.namedtuple('Scoreboard', 'alias cls target title')
+
+class SavedScoreboards:
+	def __init__(self, path: str) -> None:
+		self.path = path
+		self.saved = {} # List[Scoreboard]
+		self.lock = RLock()
+	
+	def append(self, scoreboard: Scoreboard) -> bool:
+		ret = self.__append(scoreboard)
+		self.save()
+		return ret
+
+	def __append(self, scoreboard: Scoreboard) -> bool:
+		with self.lock:
+			existed = self.get(scoreboard.alias)
+			if not existed:
+				self.saved[scoreboard.alias] = scoreboard
+				return True
+			else:
+				return False
+
+	def remove(self, alias):
+		ret = self.__remove(alias)
+		self.save()
+		return ret
+
+	def __remove(self, alias):
+		with self.lock:
+			existed = self.get(alias)
+			if not existed:
+				return False
+			else:
+				self.saved.pop(alias)
+				return True
+
+	def load(self, logger = None):
+		error_log = lambda content: (logger.error if logger is not None else print)(content)
+		with self.lock:
+			if not os.path.isdir(os.path.dirname(self.path)):
+				os.makedirs(os.path.dirname(self.path))
+			self.saved.clear()
+			need_save = False
+			if not os.path.isfile(self.path):
+				need_save = True
+			else:
+				with open(self.path, 'r', encoding='UTF-8') as f:
+					try:
+						for key, value in json.load(f).items():
+							self.__append(Scoreboard(key, value['cls'], value['target'], value['title']))
+					except Exception as e:
+						error_log(e)
+						need_save = True
+			if need_save:
+				self.save()
+
+	def save(self):
+		with self.lock:
+			out = {}
+			for key, value in self.saved.items():
+				out[key] = {
+					'cls': value.cls,
+					'target': value.target,
+					'title': value.title
+				}
+			with open(self.path, 'w', encoding = 'UTF-8') as f:
+				json.dump(out, f, ensure_ascii = False)
+
+	def get(self, name) -> Optional[Scoreboard]:
+		with self.lock:
+			return self.saved.get(name)
+
+	def list_scoreboard(self) -> List[Scoreboard]:
+		with self.lock:
+			return self.saved.values()
+			
+stored = SavedScoreboards(SavedScoreboardFile)
 
 
 def name_to_uuid_fromAPI(name):
@@ -126,14 +212,13 @@ def isBot(name: str):
 
 
 def print_message(server, info, msg, is_tell=True):
-	for line in msg.splitlines():
-		if info.is_player:
-			if is_tell:
-				server.tell(info.player, line)
-			else:
-				server.say(line)
+	if info.is_player:
+		if is_tell:
+			server.tell(info.player, msg)
 		else:
-			server.reply(info, line)
+			server.say(msg)
+	else:
+		server.reply(info, msg)
 
 
 def get_stat_data(uuid, cls, target):
@@ -161,6 +246,21 @@ def trigger_save_all(server):
 		time.sleep(0.01)
 
 
+def show_help(server, info):
+	help_msg_rtext = RTextList()
+	symbol = 0
+	for line in HelpMessage.splitlines(True):
+		result = re.search(r'(?<=§7)' + Prefix + r'[\S ]*?(?=§)', line)
+		if result is not None and symbol != 2:
+			help_msg_rtext.append(RText(line).c(RAction.suggest_command, result.group()).h('点击以填入 §7{}§r'.format(result.group())))
+			symbol = 1
+		else:
+			help_msg_rtext.append(line)
+			if symbol == 1:
+				symbol += 1
+	server.reply(info, help_msg_rtext)
+
+
 def get_display_text(cls, target):
 	return '§6{}§r.§e{}§r'.format(cls, target)
 
@@ -169,7 +269,7 @@ def show_stat(server, info, name, cls, target, is_uuid, is_tell):
 	global uuid_list
 	uuid = name if is_uuid else uuid_list.get(name, None)
 	if uuid is None:
-		print_message(server, info, '玩家{}的uuid不在储存列表中'.format(name), is_tell)
+		print_message(server, info, '玩家§b{}§r的uuid不在储存列表中'.format(name), is_tell)
 	msg = '玩家§b{}§r的统计信息[{}]的值为§a{}§r'.format(name, get_display_text(cls, target), get_stat_data(uuid, cls, target))
 	print_message(server, info, msg, is_tell)
 
@@ -240,20 +340,53 @@ def build_scoreboard(server, info, cls, target, title=None, list_bot=False):
 	show_scoreboard(server)
 
 
+def save_scoreboard(server, info, alias, cls, target, title = None):
+	to_save = Scoreboard(alias, cls, target, title)
+	is_succeeded = stored.append(to_save)
+	if is_succeeded:
+		server.reply(info, f'已将统计项§6{alias}§r保存到快速访问, 请注意: 本插件并不会检查保存的统计类别是否有效!')
+	else:
+		server.reply(info, RText(f'快速访问列表中§c已存在§r统计项§6{alias}§r, §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('点此查阅快速访问列表'))
+
+
+def rm_scoreboard(server, info, alias):
+	is_succeeded = stored.remove(alias)
+	if is_succeeded:
+		server.reply(info, f'已自快速访问中移除统计项§6{alias}§r')
+	else:
+		server.reply(info, RText(f'§c未找到§r快速访问统计项§6{alias}§r, §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('点此查阅快速访问列表'))
+
+
+def list_saved_scoreboard(server, info, is_tell):
+	saved_list = stored.list_scoreboard()
+	print_text = RTextList()
+	print_text.append('已保存的快速访问统计项如下: \n')
+	num = 0
+	for s in saved_list:
+		num += 1
+		display = '统计§6类别§r/§e规则§r: ' + get_display_text(s.cls, s.target)
+		if s.title is not None:
+			display += f' §2标题§r: {s.title}'
+		print_text.append(RText(f'[§7{num}§r] §d{s.alias}§r {display}').c(RAction.run_command, f'{Prefix} {s.alias}').h(f'点击以显示计分板{s.alias}'))
+		if num < len(saved_list):
+			print_text.append('\n')
+	print_message(server, info, print_text, is_tell)
+
+
 def add_player_to_uuid_list(server, info, player):
 	global uuid_list
 	if player in uuid_list:
-		server.reply(info, '玩家{}已在列表中'.format(player))
+		server.reply(info, '玩家§6{}§r已在列表中'.format(player))
 		return
 	try:
 		uuid = name_to_uuid_fromAPI(player)
 	except:
-		server.reply(info, '无法获得玩家{}的uuid'.format(player))
+		server.reply(info, '无法获得玩家§6{}§r的uuid'.format(player))
 		raise
 	else:
 		uuid_list[player] = uuid
 		save_uuid_list()
-		server.reply(info, '玩家{}添加成功, uuid为{}'.format(player, uuid))
+		server.reply(info, '玩家§6{}§r添加成功, uuid为§e{}§r'.format(player, uuid))
 
 
 def on_info(server, info: Info, arg=None):
@@ -281,21 +414,59 @@ def on_info(server, info: Info, arg=None):
 
 	if len(command) == 1:
 		if not is_called:
-			print_message(server, info, HelpMessage)
+			show_help(server, info)
 		return
 
 	cmdlen = len(command)
 
 	@new_thread(PLUGIN_METADATA['id'])
 	def inner():
+		error_get_saved = False
 		# !!stats query [玩家] [统计类别] [统计内容] (-uuid)
-		if cmdlen == 5 and command[1] == 'query':
-			show_stat(server, info, command[2], command[3], command[4], is_uuid, is_tell)
+		# !!stats query [玩家] [保存的统计项] (-uuid)
+		if cmdlen in [4, 5] and command[1] == 'query':
+			if cmdlen == 5:
+				show_stat(server, info, command[2], command[3], command[4], is_uuid, is_tell)
+			else:
+				scoreboard = stored.get(command[3])
+				if scoreboard:
+					show_stat(server, info, command[2], scoreboard.cls, scoreboard.target, is_uuid, is_tell)
+				else:
+					error_get_saved = True
 
 		# !!stats rank [统计类别] [统计内容] (过滤bot前缀)
-		elif cmdlen == 4 and command[1] == 'rank':
-			return show_rank(server, info, command[2], command[3], list_bot, is_tell, is_all, is_called)
+		# !!stats rank [保存的统计项] (过滤bot前缀)
+		elif cmdlen in [3, 4] and command[1] == 'rank':
+			if cmdlen == 4:
+				return show_rank(server, info, command[2], command[3], list_bot, is_tell, is_all, is_called)
+			else:
+				scoreboard = stored.get(command[2])
+				if scoreboard:
+					show_rank(server, info, scoreboard.cls, scoreboard.target, list_bot, is_tell, is_all, is_called)
 
+		# !!stats list
+		elif cmdlen == 2 and command[1] == 'list':
+			list_saved_scoreboard(server, info, is_tell)
+
+		# !!stats save [要保存的统计项] [统计类别] [统计内容] [<标题>]
+		elif cmdlen in [5, 6] and command[1] == 'save':
+			title = None
+			if cmdlen == 6:
+				title = command[5]
+			save_scoreboard(server, info, command[2], command[3], command[4], title)
+
+		# !!stats del [要删除的统计项]
+		elif cmdlen == 3 and command[1] == 'del':
+			rm_scoreboard(server, info, command[2])
+
+		# !!stats [保存的统计项] (过滤bot前缀)
+		elif cmdlen == 2 and stored.get(command[1]):
+			scoreboard = stored.get(command[1])
+			if scoreboard:
+				build_scoreboard(server, info, scoreboard.cls, scoreboard.target, scoreboard.title, list_bot)
+			else:
+				error_get_saved = True
+				
 		# !!stats scoreboard [统计类别] [统计内容] [<标题>] (过滤bot前缀)
 		elif cmdlen in [4, 5] and command[1] == 'scoreboard':
 			title = command[4] if cmdlen == 5 else None
@@ -314,8 +485,10 @@ def on_info(server, info: Info, arg=None):
 			add_player_to_uuid_list(server, info, command[2])
 
 		else:
-			print_message(server, info, '参数错误！请输入{}以获取插件帮助'.format(Prefix))
+			print_message(server, info, RText('§c参数错误！§7点此§r以获取插件帮助'.format(Prefix)).c(RAction.run_command, Prefix).h('查阅插件帮助'))
 
+		if error_get_saved:
+			server.reply(info, RText('§c未在快速访问列表中找到该统计项! §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('查阅快速访问列表'))
 	inner()
 
 
@@ -330,5 +503,6 @@ def on_player_joined(server, player, info):
 
 def on_load(server: ServerInterface, old_module):
 	server.register_help_message(Prefix, '查询统计信息并管理计分板')
+	stored.load(server.logger)
 	refresh_uuid_list(server)
 	server.logger.info('UUID list size: {}'.format(len(uuid_list)))
