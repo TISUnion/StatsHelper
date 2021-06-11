@@ -13,7 +13,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.2-alpha2',
+	'version': '6.2-alpha3',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -344,9 +344,9 @@ def save_scoreboard(server, info, alias, cls, target, title = None):
 	to_save = Scoreboard(alias, cls, target, title)
 	is_succeeded = stored.append(to_save)
 	if is_succeeded:
-		server.reply(info, f'已将统计项§6{alias}§r保存到快速访问, 请注意: 本插件并不会检查保存的统计类别是否有效!')
+		server.reply(info, f'已将统计项§d{alias}§r保存到快速访问, 请注意: 本插件并不会检查保存的统计类别是否有效!')
 	else:
-		server.reply(info, RText(f'快速访问列表中§c已存在§r统计项§6{alias}§r, §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('点此查阅快速访问列表'))
+		server.reply(info, RText(f'快速访问列表中§c已存在§r统计项§d{alias}§r, §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('点此查阅快速访问列表'))
 
 
 def rm_scoreboard(server, info, alias):
