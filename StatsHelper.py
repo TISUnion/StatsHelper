@@ -13,7 +13,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.2-alpha1',
+	'version': '6.2-alpha2',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -130,7 +130,7 @@ class SavedScoreboards:
 					'title': value.title
 				}
 			with open(self.path, 'w', encoding = 'UTF-8') as f:
-				json.dump(out, f, ensure_ascii = False)
+				json.dump(out, f, indent = 2, ensure_ascii = False)
 
 	def get(self, name) -> Optional[Scoreboard]:
 		with self.lock:
