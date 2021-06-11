@@ -376,17 +376,17 @@ def list_saved_scoreboard(server, info, is_tell):
 def add_player_to_uuid_list(server, info, player):
 	global uuid_list
 	if player in uuid_list:
-		server.reply(info, '玩家§6{}§r已在列表中'.format(player))
+		server.reply(info, '玩家§b{}§r已在列表中'.format(player))
 		return
 	try:
 		uuid = name_to_uuid_fromAPI(player)
 	except:
-		server.reply(info, '无法获得玩家§6{}§r的uuid'.format(player))
+		server.reply(info, '无法获得玩家§b{}§r的uuid'.format(player))
 		raise
 	else:
 		uuid_list[player] = uuid
 		save_uuid_list()
-		server.reply(info, '玩家§6{}§r添加成功, uuid为§e{}§r'.format(player, uuid))
+		server.reply(info, '玩家§b{}§r添加成功, uuid为§7{}§r'.format(player, uuid))
 
 
 def on_info(server, info: Info, arg=None):
