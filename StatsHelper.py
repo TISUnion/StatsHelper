@@ -13,7 +13,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.2-alpha4',
+	'version': '6.2-alpha5',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
@@ -37,10 +37,10 @@ HelpMessage = '''
 一个统计信息助手插件，可查询/排名/使用计分板列出各类统计信息
 §a【格式说明】§r
 §7{0}§r 显示帮助信息
-§7{0}§r §d<统计项代名> §7[<-bot>]§r 快速调出一个保存的计分板
-§7{0} list §7[<-tell>] §r列出已保存的计分板
+§7{0}§r §d<计分项代名> §7[<-bot>]§r 快速调出一个保存的计分板
+§7{0} list §7[<-tell>] §r列出已保存的计分项信息
 §7{0} save §d<计分项代名> §6<统计类别> §e<统计内容> §2[<标题>]§r 保存快速计分
-§7{0} del §d<计分项代名> §r删除一个快速访问计分项 
+§7{0} del §d<计分项代名> §r删除一个快速访问计分项
 §7{0} query §b<玩家> §6<统计类别> §e<统计内容> §7[<-uuid>]§r §7[<-tell>]§d
 §7{0} rank §6<统计类别> §e<统计内容> §7[<-bot>]§r §7[<-tell>]§r
 §7{0} scoreboard §6<统计类别> §e<统计内容> §2[<标题>] §7[<-bot>]§r
@@ -48,7 +48,7 @@ HelpMessage = '''
 §7{0} scoreboard hide§r 隐藏该插件的计分板
 §7{0} add_player §b<玩家名>§r 将指定玩家添加至玩家uuid列表中。将添加盗版uuid
 §a【参数说明】§r
-§d<统计项代名>§r: 可以使用§7{0} list§r查询有效的代名, 此外§7{0} query§r/§7rank§f中的§6<统计类别>§r §e<统计内容>§f可以使用§d<统计项代名>§f替代
+§d<计分项代名>§r: 可以使用§7{0} list§r查询有效的代名, 此外§7{0} query§r/§7rank§f中的§6<统计类别>§r §e<统计内容>§f可以使用§d<统计项代名>§f替代
 §6<统计类别>§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
 §6killed§r, §6killed_by§r 的 §e<统计内容> §r为 §e<生物id>§r
 §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §6<统计类别>§r 为 §e<物品/方块id>§r
