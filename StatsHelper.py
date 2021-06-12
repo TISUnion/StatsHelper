@@ -353,9 +353,9 @@ def save_scoreboard(server, info, alias, cls, target, title = None):
 def rm_scoreboard(server, info, alias):
 	is_succeeded = stored.remove(alias)
 	if is_succeeded:
-		server.reply(info, f'已自快速访问中移除统计项§6{alias}§r')
+		server.reply(info, f'已自快速访问中移除统计项§d{alias}§r')
 	else:
-		server.reply(info, RText(f'§c未找到§r快速访问统计项§6{alias}§r, §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('点此查阅快速访问列表'))
+		server.reply(info, RText(f'§c未找到§r快速访问统计项§d{alias}§r, §7点此§r查阅列表').c(RAction.run_command, f'{Prefix} list').h('点此查阅快速访问列表'))
 
 
 def list_saved_scoreboard(server, info, is_tell):
