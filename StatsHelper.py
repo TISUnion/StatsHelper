@@ -13,7 +13,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
 	'id': 'stats_helper',
-	'version': '6.2-alpha6',
+	'version': '7.0.0',
 	'name': 'Stats helper',
 	'description': 'A Minecraft statistic helper',
 	'author': [
