@@ -5,9 +5,9 @@ import os
 import re
 import shutil
 import time
-from typing import Optional, List
-from urllib.request import urlopen
 from threading import RLock
+from typing import Optional, List, Dict
+from urllib.request import urlopen
 
 from mcdreforged.api.all import *
 
@@ -67,10 +67,11 @@ flag_save_all = False
 flag_unload = False
 Scoreboard = collections.namedtuple('Scoreboard', 'alias cls target title')
 
+
 class SavedScoreboards:
 	def __init__(self, path: str) -> None:
 		self.path = path
-		self.saved = {} # List[Scoreboard]
+		self.saved = {}  # type: Dict[str, Scoreboard]
 		self.lock = RLock()
 	
 	def append(self, scoreboard: Scoreboard) -> bool:
@@ -101,7 +102,7 @@ class SavedScoreboards:
 				self.saved.pop(alias)
 				return True
 
-	def load(self, logger = None):
+	def load(self, logger=None):
 		error_log = lambda content: (logger.error if logger is not None else print)(content)
 		with self.lock:
 			if not os.path.isdir(os.path.dirname(self.path)):
@@ -130,8 +131,8 @@ class SavedScoreboards:
 					'target': value.target,
 					'title': value.title
 				}
-			with open(self.path, 'w', encoding = 'UTF-8') as f:
-				json.dump(out, f, indent = 2, ensure_ascii = False)
+			with open(self.path, 'w', encoding='UTF-8') as f:
+				json.dump(out, f, indent=2, ensure_ascii=False)
 
 	def get(self, name) -> Optional[Scoreboard]:
 		with self.lock:
@@ -139,8 +140,9 @@ class SavedScoreboards:
 
 	def list_scoreboard(self) -> List[Scoreboard]:
 		with self.lock:
-			return self.saved.values()
-			
+			return list(self.saved.values())
+
+
 stored = SavedScoreboards(SavedScoreboardFile)
 
 
