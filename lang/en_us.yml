@@ -1,0 +1,53 @@
+stats_helper.help_message: |
+  ------MCDR {name} Plugin v{version}------
+  §a[Command Format]§r
+  §7{prefix}§r Shows help message
+  §7{prefix} list §7[<-tell>]§r List quick scoreboards
+  §7{prefix} save §d<alias> §6<stat_class> §e<stat_target> §2[<title>]§r Save a quick scoreboard
+  §7{prefix} del §d<alias>§r Delete a quick scoreboard
+  §7{prefix} query §b<player> §6<stat_class> §e<stat_target> §7[<-uuid>]§r §7[<-tell>]§d
+  §7{prefix} query §b<player> §d<alias> §7[<-uuid>]§r §7[<-tell>]§d
+  §7{prefix} rank §6<stat_class> §e<stat_target> §7[<-bot>]§r §7[<-tell>]§r
+  §7{prefix} rank §d<alias> §7[<-bot>]§r §7[<-tell>]§r
+  §7{prefix} scoreboard §6<stat_class> §e<stat_target> §2[<title>] §7[<-bot>]§r
+  §7{prefix} scoreboard §d<alias> §7[<-bot>]§r
+  §7{prefix} scoreboard show§r Show the scoreboard of this plugin
+  §7{prefix} scoreboard hide§r Display the scoreboard of this plugin
+  §7{prefix} add_player §b<player>§r Add the player into the player uuid list. Will add offline uuid will be added
+  §a[Arguments]§r
+  §6<stat_class>§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
+  §e<stat_target>§r of §6killed§r, §6killed_by§r is §e<entity_id>§r
+  §6<stat_class>§r of §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r is §e<block/item id>§r
+  For §e<stat_target>§r of §6custom§r, check the statistic json file or Minecraft Wiki
+  "minecraft" prefix is not required for arguments above
+  §7[<-uuid>]§r: Use uuid as the player name; §7[<-bot>]§r: Counts bots; §7[<-tell>]§r: Only visible to yourself; §7[<-all>]§r: List all entries
+  §a[Examples]§r
+  §7{prefix} save fly custom aviate_one_cm "I Can Fly"§r
+  §7{prefix} query §bFallen_Breath §6used §ewater_bucket§r
+  §7{prefix} rank §6custom §etime_since_rest §7-bot§r
+  §7{prefix} scoreboard §6mined §estone§r Diggy Stone§r
+stats_helper.summary_help: 'Query statistics and build scoreboard'
+stats_helper.click_to_fill: 'Click to fill §7{0}§r'
+stats_helper.player_uuid_not_found: 'uuid of player §b{0}§r not found'
+stats_helper.player_stat_display: 'Statistic [{1}] of player §b{0}§r has value §a{2}§r'
+stats_helper.stat_not_found: 'Statistic not found, or the statistic is completely empty'
+stats_helper.show_rank.title: 'Statistic [{0}], total amount: §c{1}§r, Top {2}:'
+stats_helper.save_scoreboard.done: 'Saved §d{0}§r to quick scoreboards. Note: validity is not check'
+stats_helper.save_scoreboard.duplicated: 'Quick scoreboard §calready§r contains §d{0}§r, click §7here§r to see the list'
+stats_helper.rm_scoreboard.done: 'Removed quick scoreboard §d{0}§r'
+stats_helper.rm_scoreboard.not_found: 'Quick scoreboard §d{0}§r not found, click §7here§r to see the list'
+stats_helper.list_scoreboard.promote: 'Click to show quick scoreboard'
+stats_helper.list_scoreboard.add: 'Click to §aadd§r a quick scoreboard'
+stats_helper.list_scoreboard.summary: 'Quick scoreboard list: '
+stats_helper.list_scoreboard.empty: '§eQuick scoreboard is empty, click the green plus sign above to add one§r'
+stats_helper.list_scoreboard.cls_target: 'Stat §6class§r/§etarget§r'
+stats_helper.list_scoreboard.title: 'Title'
+stats_helper.list_scoreboard.delete: 'Click to §4delete§r quick scoreboard§d{0}§r'
+stats_helper.list_scoreboard.show: 'Click to §ashow§r quick scoreboard§d{0}§r'
+stats_helper.add_player.player_existed: 'Player §b{0}§r is already in the list'
+stats_helper.add_player.get_uuid_failed: 'Fail to fetch uuid of player §b{0}§r'
+stats_helper.add_player.done: 'Player §b{0}§r added with uuid §7{1}§r'
+stats_helper.command.unknown_argument: '§cUnknown command!§r Click here for help'
+stats_helper.command.unknown_scoreboard: '§cUnknown quick scoreboard! Click here to see the list'
+
+command_exception.unknown_quick_scoreboard: 'Unknown quick scoreboard §d{0}§r'

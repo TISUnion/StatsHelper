@@ -1,0 +1,53 @@
+stats_helper.help_message: |
+  ------MCDR {name} 插件 v{version}------
+  §a【格式说明】§r
+  §7{prefix}§r 显示帮助信息
+  §7{prefix} list §7[<-tell>]§r 列出所有的快速计分板
+  §7{prefix} save §d<代名> §6<统计类别> §e<统计内容> §2[<标题>]§r 保存快速计分版
+  §7{prefix} del §d<代名>§r 删除一个快速访问计分项
+  §7{prefix} query §b<玩家> §6<统计类别> §e<统计内容> §7[<-uuid>]§r §7[<-tell>]§d
+  §7{prefix} query §b<玩家> §d<代名> §7[<-uuid>]§r §7[<-tell>]§d
+  §7{prefix} rank §6<统计类别> §e<统计内容> §7[<-bot>]§r §7[<-tell>]§r
+  §7{prefix} rank §d<代名> §7[<-bot>]§r §7[<-tell>]§r
+  §7{prefix} scoreboard §6<统计类别> §e<统计内容> §2[<标题>] §7[<-bot>]§r
+  §7{prefix} scoreboard §d<代名> §7[<-bot>]§r 显示快速计分板
+  §7{prefix} scoreboard show§r 显示该插件构建的计分板
+  §7{prefix} scoreboard hide§r 隐藏该插件构建的计分板
+  §7{prefix} add_player §b<玩家>§r 将指定玩家添加至玩家uuid列表中。将添加盗版uuid
+  §a【参数说明】§r
+  §6<统计类别>§r: §6killed§r, §6killed_by§r, §6dropped§r, §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r, §6custom§r
+  §6killed§r, §6killed_by§r 的 §e<统计内容>§r 为 §e<生物id>§r
+  §6picked_up§r, §6used§r, §6mined§r, §6broken§r, §6crafted§r 的 §6<统计类别>§r 为 §e<物品/方块id>§r
+  §6custom§r 的 §e<统计内容>§r 详见统计信息的json文件或 MC WIki
+  上述内容无需带minecraft前缀
+  §7[<-uuid>]§r: 用uuid替换玩家名; §7[<-bot>]§r: 统计bot与cam; §7[<-tell>]§r: 仅自己可见; §7[<-all>]§r: 列出所有项
+  §a【例子】§r
+  §7{prefix} save fly custom aviate_one_cm 飞行榜§r
+  §7{prefix} query §bFallen_Breath §6used §ewater_bucket§r
+  §7{prefix} rank §6custom §etime_since_rest §7-bot§r
+  §7{prefix} scoreboard §6mined §estone§r 挖石榜
+stats_helper.summary_help: '查询统计信息并构建计分板'
+stats_helper.click_to_fill: '点击以填入 §7{0}§r'
+stats_helper.player_uuid_not_found: '玩家§b{0}§r的uuid不在储存列表中'
+stats_helper.player_stat_display: '玩家§b{0}§r的统计信息[{1}]的值为§a{2}§r'
+stats_helper.stat_not_found: '未找到该统计项或该统计项全空！'
+stats_helper.show_rank.title: '统计信息[{0}]的总数为§c{1}§r，前{2}名为'
+stats_helper.save_scoreboard.done: '已添加快速计分板§d{0}§r。注意: 未检查统计项的有效性!'
+stats_helper.save_scoreboard.duplicated: '快速计分板§d{0}§r§c已存在§r, §7点此§r查阅列表'
+stats_helper.rm_scoreboard.done: '快速计分板§d{0}§r已移除'
+stats_helper.rm_scoreboard.duplicated: '§c未找到§r快速计分板§d{0}§r, §7点此§r查阅列表'
+stats_helper.list_scoreboard.promote: '点此查阅快速计分板列表'
+stats_helper.list_scoreboard.add: '点此§a添加§r一个快速计分板'
+stats_helper.list_scoreboard.summary: '已保存的快速计分板如下: '
+stats_helper.list_scoreboard.empty: '§e还没有保存快速计分板呢, 点击上方绿色加号添加一个吧§r'
+stats_helper.list_scoreboard.cls_target: '统计§6类别§r/§e规则§r'
+stats_helper.list_scoreboard.title: '标题'
+stats_helper.list_scoreboard.delete: '点此§4删除§r快速计分板§d{0}§r'
+stats_helper.list_scoreboard.show: '点击以§a显示§r计分板§d{0}§r'
+stats_helper.add_player.player_existed: '玩家§b{0}§r已在列表中'
+stats_helper.add_player.get_uuid_failed: '无法获得玩家§b{0}§r的uuid'
+stats_helper.add_player.done: '玩家§b{0}§r添加成功, uuid为§7{1}§r'
+stats_helper.command.unknown_argument: '§c参数错误！§7点此§r以获取插件帮助'
+stats_helper.command.unknown_scoreboard: '§c未知统计项! §7点此§r查阅列表'
+
+command_exception.unknown_quick_scoreboard: '未知的快速计分板§d{0}§r'

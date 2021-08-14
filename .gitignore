@@ -4,3 +4,4 @@ server/
 test.py
 test.json
 uuid.json
+*.mcdr
