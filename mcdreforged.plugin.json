@@ -1,6 +1,6 @@
 {
 	"id": "stats_helper",
-	"version": "7.1.1",
+	"version": "7.1.2",
 	"name": "Stats Helper",
 	"description": {
 		"en_us": "A Minecraft statistic helper",
@@ -11,7 +11,7 @@
 	],
 	"link": "https://github.com/TISUnion/StatsHelper",
 	"dependencies": {
-		"mcdreforged": ">=2.0.0-beta.4"
+		"mcdreforged": ">=2.0.0-beta.7"
 	},
 	"resources": [
 		"lang"

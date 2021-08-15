@@ -76,8 +76,8 @@ def save_uuid_list():
 		json.dump(uuid_list, file, indent=4)
 
 
-def tr(translation_key: str, *args):
-	return ServerInterface.get_instance().tr('{}.{}'.format(PLUGIN_ID, translation_key), *args)
+def tr(translation_key: str, *args, **kwargs):
+	return ServerInterface.get_instance().tr('{}.{}'.format(PLUGIN_ID, translation_key), *args, **kwargs)
 
 
 def print_message(source: CommandSource, msg: Union[str, RTextBase], is_tell: bool = True):
@@ -375,11 +375,7 @@ def on_load(server: PluginServerInterface, old_module):
 	global PLUGIN_ID, HelpMessage
 	PLUGIN_ID = server.get_self_metadata().id
 	server.register_help_message(constants.Prefix, tr('summary_help'))
-	HelpMessage = tr('help_message').strip().format(
-		name=server.get_self_metadata().name,
-		version=server.get_self_metadata().version,
-		prefix=constants.Prefix,
-	)
+	HelpMessage = tr('help_message', name=server.get_self_metadata().name, version=server.get_self_metadata().version, prefix=constants.Prefix)
 	stored.load(server.logger)
 	refresh_uuid_list(server)
 	server.logger.info('UUID list size: {}'.format(len(uuid_list)))
