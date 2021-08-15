@@ -100,6 +100,7 @@ def get_player_list(list_bot: bool) -> List[UUID_LIST_ITEM]:
 
 
 def trigger_save_all(server: ServerInterface):
+	assert not server.is_on_executor_thread()
 	global flag_save_all
 	flag_save_all = False
 	server.execute('save-all')
@@ -286,6 +287,10 @@ def register_command(server: PluginServerInterface):
 		else:
 			build_scoreboard(ctx.source, ref[0], ref[1], title, list_bot=args.is_bot)
 
+	@new_thread(PLUGIN_ID + ' add player')
+	def _add_player_to_uuid_list(source: CommandSource, player: str):
+		add_player_to_uuid_list(source, player)
+
 	server.register_command(
 		Literal(constants.Prefix).
 		runs(show_help).
@@ -344,7 +349,7 @@ def register_command(server: PluginServerInterface):
 		).
 		then(Literal('add_player').then(
 			Text('player').runs(
-				lambda src, ctx: add_player_to_uuid_list(src, ctx['player'])
+				lambda src, ctx: _add_player_to_uuid_list(src, ctx['player'])
 			)
 		))
 	)
