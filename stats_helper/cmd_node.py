@@ -2,7 +2,7 @@ from mcdreforged.api.command import *
 
 from stats_helper import quick_scoreboard
 
-stored = quick_scoreboard.stored
+stored = quick_scoreboard.quick_scoreboards
 
 
 class Arguments:

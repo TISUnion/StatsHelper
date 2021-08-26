@@ -15,15 +15,23 @@ from stats_helper.cmd_node import ScoreboardQuery, UnknownQuickScoreboard
 # assigned in on_load
 from stats_helper.quick_scoreboard import Scoreboard
 
+
+class Config(Serializable):
+	save_world_on_query: bool = False
+	save_world_on_rank: bool = False
+	save_world_on_scoreboard: bool = True
+
+
+config: Config
 PLUGIN_ID = None  # type: Optional[str]
-HelpMessage = None  # type: Optional[str]
+HelpMessage = None  # type: Optional[RTextBase]
 
 uuid_list: Dict[str, str] = {}  # player -> uuid
 UUID_LIST_ITEM = Tuple[str, str]
 flag_save_all = False
 flag_unload = False
 
-stored = quick_scoreboard.stored
+quick_scoreboards = quick_scoreboard.quick_scoreboards
 
 
 def refresh_uuid_list(server: ServerInterface):
@@ -76,8 +84,8 @@ def save_uuid_list():
 		json.dump(uuid_list, file, indent=4)
 
 
-def tr(translation_key: str, *args, **kwargs):
-	return ServerInterface.get_instance().tr('{}.{}'.format(PLUGIN_ID, translation_key), *args, **kwargs)
+def tr(translation_key: str, *args, **kwargs) -> RTextMCDRTranslation:
+	return ServerInterface.get_instance().rtr('{}.{}'.format(PLUGIN_ID, translation_key), *args, **kwargs)
 
 
 def print_message(source: CommandSource, msg: Union[str, RTextBase], is_tell: bool = True):
@@ -111,15 +119,16 @@ def trigger_save_all(server: ServerInterface):
 def show_help(source: CommandSource):
 	help_msg_rtext = RTextList()
 	symbol = 0
-	for line in HelpMessage.splitlines(True):
-		result = re.search(r'(?<=§7)' + constants.Prefix + r'[\S ]*?(?=§)', line)
-		if result is not None and symbol != 2:
-			help_msg_rtext.append(RText(line).c(RAction.suggest_command, result.group()).h(tr('click_to_fill', result.group())))
-			symbol = 1
-		else:
-			help_msg_rtext.append(line)
-			if symbol == 1:
-				symbol += 1
+	with source.preferred_language_context():
+		for line in HelpMessage.to_plain_text().splitlines(True):
+			result = re.search(r'(?<=§7)' + constants.Prefix + r'[\S ]*?(?=§)', line)
+			if result is not None and symbol != 2:
+				help_msg_rtext.append(RText(line).c(RAction.suggest_command, result.group()).h(tr('click_to_fill', result.group())))
+				symbol = 1
+			else:
+				help_msg_rtext.append(line)
+				if symbol == 1:
+					symbol += 1
 	source.reply(help_msg_rtext)
 
 
@@ -132,11 +141,15 @@ def show_stat(source: CommandSource, name: str, cls: str, target: str, is_uuid: 
 	uuid = name if is_uuid else uuid_list.get(name, None)
 	if uuid is None:
 		print_message(source, tr('player_uuid_not_found', name), is_tell=is_tell)
+	if config.save_world_on_query:
+		trigger_save_all(source.get_server())
 	msg = tr('player_stat_display', name, get_display_text(cls, target), utils.get_stat_data(uuid, cls, target))
 	print_message(source, msg, is_tell=is_tell)
 
 
 def show_rank(source: CommandSource, cls: str, target: str, list_bot: bool, is_tell: bool, is_all: bool, is_called: bool = False):
+	if config.save_world_on_rank and not is_called:
+		trigger_save_all(source.get_server())
 	player_list = get_player_list(list_bot)
 	arr = []
 	sum = 0
@@ -186,7 +199,8 @@ def hide_scoreboard(server: ServerInterface):
 def build_scoreboard(source: CommandSource, cls: str, target: str, title: Optional[str] = None, list_bot: bool = False):
 	server = source.get_server()
 	player_list = get_player_list(list_bot)
-	trigger_save_all(server)
+	if config.save_world_on_scoreboard:
+		trigger_save_all(server)
 	server.execute('scoreboard objectives remove {}'.format(constants.ScoreboardName))
 	if title is None:
 		title = get_display_text(cls, target)
@@ -202,7 +216,7 @@ def build_scoreboard(source: CommandSource, cls: str, target: str, title: Option
 
 def save_scoreboard(source: CommandSource, alias: str, cls: str, target: str, title: Optional[str] = None):
 	to_save = quick_scoreboard.Scoreboard(alias, cls, target, title)
-	is_succeeded = stored.append(to_save)
+	is_succeeded = quick_scoreboards.append(to_save)
 	if is_succeeded:
 		source.reply(tr('save_scoreboard.done', alias))
 	else:
@@ -210,7 +224,7 @@ def save_scoreboard(source: CommandSource, alias: str, cls: str, target: str, ti
 
 
 def rm_scoreboard(source: CommandSource, alias: str):
-	is_succeeded = stored.remove(alias)
+	is_succeeded = quick_scoreboards.remove(alias)
 	if is_succeeded:
 		source.reply(tr('rm_scoreboard.done', alias))
 	else:
@@ -218,7 +232,7 @@ def rm_scoreboard(source: CommandSource, alias: str):
 
 
 def list_quick_scoreboard(source: CommandSource, is_tell: bool):
-	saved_list = stored.list_scoreboard()
+	saved_list = quick_scoreboards.list_scoreboard()
 	print_text = RTextList()
 	print_text.append(tr('list_scoreboard.summary') + RText('[+]', color=RColor.green).c(RAction.suggest_command, f'{constants.Prefix} save ').h('list_scoreboard.add') + '\n')
 	num = 0
@@ -256,7 +270,7 @@ def add_player_to_uuid_list(source: CommandSource, player: str):
 
 
 def register_command(server: PluginServerInterface):
-	def exe(node: ArgumentNode, callback: Callable[[CommandContext, Arguments], Any]) -> ArgumentNode:
+	def exe(node: AbstractNode, callback: Callable[[CommandContext, Arguments], Any]) -> AbstractNode:
 		return node.runs(lambda src, ctx: callback(ctx, Arguments.empty())).\
 			then(ArgumentEnding('args').runs(lambda src, ctx: callback(ctx, ctx['args'])))
 
@@ -372,11 +386,12 @@ def on_player_joined(server: PluginServerInterface, player: str, info: Info):
 
 
 def on_load(server: PluginServerInterface, old_module):
-	global PLUGIN_ID, HelpMessage
+	global PLUGIN_ID, HelpMessage, config
 	PLUGIN_ID = server.get_self_metadata().id
-	server.register_help_message(constants.Prefix, tr('summary_help'))
+	config = server.load_config_simple(constants.ConfigFile, in_data_folder=False, target_class=Config)
 	HelpMessage = tr('help_message', name=server.get_self_metadata().name, version=server.get_self_metadata().version, prefix=constants.Prefix)
-	stored.load(server.logger)
+	quick_scoreboards.load(server.logger)
 	refresh_uuid_list(server)
 	server.logger.info('UUID list size: {}'.format(len(uuid_list)))
+	server.register_help_message(constants.Prefix, tr('summary_help'))
 	register_command(server)

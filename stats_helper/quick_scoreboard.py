@@ -84,5 +84,5 @@ class QuickScoreboards:
 			return list(self.saved.values())
 
 
-stored = QuickScoreboards(constants.QuickScoreboardFile)
+quick_scoreboards = QuickScoreboards(constants.QuickScoreboardFile)
 
