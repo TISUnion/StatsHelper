@@ -1,7 +1,5 @@
 import os
 
-ServerPath = 'server'
-WorldPath = os.path.join(ServerPath, 'world')
 Prefix = '!!stats'
 PluginName = 'StatsHelper'
 ScoreboardName = PluginName

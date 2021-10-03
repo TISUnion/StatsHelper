@@ -5,6 +5,7 @@ from typing import Optional
 from urllib.request import urlopen
 
 from stats_helper import constants
+from stats_helper.config import Config
 
 
 def name_to_uuid_fromAPI(name):
@@ -27,7 +28,7 @@ def isBot(name: str):
 
 def get_stat_data(uuid: str, cls: str, target: str) -> Optional[int]:
 	try:
-		with open(os.path.join(constants.WorldPath, 'stats', uuid + '.json'), 'r') as f:
+		with open(os.path.join(Config.get_instance().get_world_path(), 'stats', uuid + '.json'), 'r') as f:
 			return json.load(f)['stats']['minecraft:' + cls]['minecraft:' + target]
 	except:
 		return None

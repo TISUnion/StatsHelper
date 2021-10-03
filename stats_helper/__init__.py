@@ -12,15 +12,8 @@ from mcdreforged.api.all import *
 from stats_helper import constants, utils, quick_scoreboard
 from stats_helper.cmd_node import ArgumentEnding, Arguments, NameAndArgumentEnding
 from stats_helper.cmd_node import ScoreboardQuery, UnknownQuickScoreboard
-# assigned in on_load
+from stats_helper.config import Config
 from stats_helper.quick_scoreboard import Scoreboard
-
-
-class Config(Serializable):
-	save_world_on_query: bool = False
-	save_world_on_rank: bool = False
-	save_world_on_scoreboard: bool = True
-
 
 config: Config
 PLUGIN_ID = None  # type: Optional[str]
@@ -52,9 +45,9 @@ def refresh_uuid_list(server: ServerInterface):
 		with open(constants.UUIDFile, 'r') as file:
 			uuid_file.update(json.load(file))
 	uuid_cache_time = {}
-	file_name = os.path.join(constants.ServerPath, 'usercache.json')
+	file_name = os.path.join(config.server_path, 'usercache.json')
 	if os.path.isfile(file_name):
-		with codecs.open(file_name, 'r', encoding='utf8') as f:
+		with codecs.open(file_name, encoding='utf8') as f:
 			try:
 				for item in json.load(f):
 					player, uuid = item['name'], item['uuid']
@@ -389,6 +382,7 @@ def on_load(server: PluginServerInterface, old_module):
 	global PLUGIN_ID, HelpMessage, config
 	PLUGIN_ID = server.get_self_metadata().id
 	config = server.load_config_simple(constants.ConfigFile, in_data_folder=False, target_class=Config)
+	Config.set_instance(config)
 	HelpMessage = tr('help_message', name=server.get_self_metadata().name, version=server.get_self_metadata().version, prefix=constants.Prefix)
 	quick_scoreboards.load(server.logger)
 	refresh_uuid_list(server)
