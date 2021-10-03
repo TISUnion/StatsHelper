@@ -336,7 +336,7 @@ def register_command(server: PluginServerInterface):
 		)).
 		then(Literal('del').then(
 			Text('alias').runs(
-				lambda src, ctx: rm_scoreboard(src, ctx['del'])
+				lambda src, ctx: rm_scoreboard(src, ctx['alias'])
 			)
 		)).
 
