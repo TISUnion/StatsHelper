@@ -16,9 +16,9 @@ def name_to_uuid_fromAPI(name):
 
 def isBot(name: str):
     name = name.upper()
-    blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#Steve#Alex#DuperMaster#Nya_Vanilla#Witch#Klio_5#######'.upper()
-    black_keys = [r'farm', r'bot_', r'cam', r'_b_', r'bot-', r'bot\d', r'^bot']
-    if blacklist.find(name) >= 0 or len(name) < 4 or len(name) > 16:
+    black_keys = [r'farm', r'bot_', r'cam', r'_b_', r'bot-', r'bot\d', r'^bot', r'A_Pi', r'nw', r'sw', r'SE',
+                  r'ne', r'nf', r'SandWall', r'storage', r'Steve', r'Alex', r'DuperMaster', r'Nya_Vanilla', r'Witch', r'Klio_5']
+    if len(name) < 4 or len(name) > 16:
         return True
     for black_key in black_keys:
         if re.search(black_key.upper(), name):
