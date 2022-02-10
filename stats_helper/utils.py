@@ -4,7 +4,7 @@ import re
 from typing import Optional
 from urllib.request import urlopen
 
-from stats_helper import constants, config
+from stats_helper import constants
 from stats_helper.config import Config
 
 
@@ -15,7 +15,7 @@ def name_to_uuid_fromAPI(name):
 
 
 def isBot(name: str):
-    black_keys = config.black_keys
+    black_keys = Config.get_instance().black_keys
     if len(name) < 4 or len(name) > 16:
         return True
     for black_key in black_keys:
