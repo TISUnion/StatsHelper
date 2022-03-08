@@ -1,12 +1,16 @@
-import collections
 import json
 import os
 from threading import RLock
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, NamedTuple
 
 from stats_helper import constants
 
-Scoreboard = collections.namedtuple('Scoreboard', 'alias cls target title')
+
+class Scoreboard(NamedTuple):
+	alias: str
+	cls: str
+	target: str
+	title: str
 
 
 class QuickScoreboards:
