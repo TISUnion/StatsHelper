@@ -18,7 +18,7 @@ def isBot(name: str):
 	if len(name) < 4 or len(name) > 16:
 		return True
 	for bad_pattern in Config.get_instance().player_name_blacklist:
-		if re.search(bad_pattern, name, re.IGNORECASE):
+		if re.fullmatch(bad_pattern, name, re.IGNORECASE):
 			return True
 	return False
 
