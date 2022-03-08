@@ -36,9 +36,3 @@ def get_rank_color(rank: int) -> str:
 	rank starts from 0
 	"""
 	return constants.rankColor[min(rank, len(constants.rankColor) - 1)]
-
-
-if __name__ == '__main__':
-	print(isBot('bot123'))
-	print(isBot('11bot123'))
-	print(isBot('Steve'))
