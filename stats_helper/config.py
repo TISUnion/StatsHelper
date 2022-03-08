@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from mcdreforged.api.utils.serializer import Serializable
 
@@ -9,6 +10,9 @@ class Config(Serializable):
 	save_world_on_query: bool = False
 	save_world_on_rank: bool = False
 	save_world_on_scoreboard: bool = True
+	player_name_blacklist: List[str] = [
+		'^bot', 'Steve', 'Alex'
+	]
 
 	def get_world_path(self) -> str:
 		return os.path.join(self.server_path, self.world_folder)

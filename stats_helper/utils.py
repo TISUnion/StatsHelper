@@ -15,13 +15,10 @@ def name_to_uuid_fromAPI(name):
 
 
 def isBot(name: str):
-	name = name.upper()
-	blacklist = 'A_Pi#nw#sw#SE#ne#nf#SandWall#storage#Steve#Alex#DuperMaster#Nya_Vanilla#Witch#Klio_5#######'.upper()
-	black_keys = [r'farm', r'bot_', r'cam', r'_b_', r'bot-', r'bot\d', r'^bot']
-	if blacklist.find(name) >= 0 or len(name) < 4 or len(name) > 16:
+	if len(name) < 4 or len(name) > 16:
 		return True
-	for black_key in black_keys:
-		if re.search(black_key.upper(), name):
+	for bad_pattern in Config.get_instance().player_name_blacklist:
+		if re.fullmatch(bad_pattern, name, re.IGNORECASE):
 			return True
 	return False
 
@@ -39,3 +36,9 @@ def get_rank_color(rank: int) -> str:
 	rank starts from 0
 	"""
 	return constants.rankColor[min(rank, len(constants.rankColor) - 1)]
+
+
+if __name__ == '__main__':
+	print(isBot('bot123'))
+	print(isBot('11bot123'))
+	print(isBot('Steve'))
