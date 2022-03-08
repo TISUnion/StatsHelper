@@ -31,7 +31,7 @@ StatsHelper
 
 `!!stats scoreboard hide` 隐藏该插件的计分板
 
-# 参数说明
+## 参数说明
 
 <统计类别>: killed, killed_by, dropped, picked_up, used, mined, broken, crafted, custom, killed, killed_by 的 <统计内容> 为 [生物id]
 
@@ -43,7 +43,7 @@ custom 的 <统计内容> 详见统计信息的json文件，或 [MC Wiki](https:
 
 [<-uuid>]: 用uuid替换玩家名; (-bot): 统计bot与cam; [<-tell>]: 仅自己可见
 
-# 例子
+## 例子
 
 `!!stats save fly custom aviate_one_cm 飞行榜`
 
@@ -52,3 +52,17 @@ custom 的 <统计内容> 详见统计信息的json文件，或 [MC Wiki](https:
 `!!stats rank custom time_since_rest -bot`
 
 `!!stats scoreboard mined stone 挖石榜`
+
+# 配置文件
+
+`server_path`: 服务端的工作路径
+
+`world_folder`: 存档文件夹。存档因位于服务端的工作路径之中
+
+`save_world_on_query`: 是否在使用指令 `!!stats query` 时使用指令 `/save-all` 保存世界
+
+`save_world_on_rank`: 是否在使用指令 `!!stats rank` 时使用指令 `/save-all` 保存世界
+
+`save_world_on_scoreboard`: 是否在使用指令 `!!stats scoreboard` 时使用指令 `/save-all` 保存世界
+
+`player_name_blacklist`: 一个字符串列表，储存着用于查询的玩家黑名单，位于其中的玩家不会被统计。每一个字符串均为一个正则表达式模式串，但一个玩家的名称被其中任意一个模式串匹配上时，该玩家将被忽略
