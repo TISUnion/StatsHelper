@@ -9,3 +9,4 @@ QuickScoreboardFile = os.path.join('config', PluginName, 'quick_scoreboard.json'
 ConfigFile = os.path.join('config', PluginName, 'config.json')
 RankAmount = 15
 rankColor = ['§b', '§d', '§e', '§f']
+AllTargetTag = '#all'

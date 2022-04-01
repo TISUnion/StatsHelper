@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import Optional
+from typing import Optional, Dict
 from urllib.request import urlopen
 
 from stats_helper import constants
@@ -26,7 +26,10 @@ def isBot(name: str):
 def get_stat_data(uuid: str, cls: str, target: str) -> Optional[int]:
 	try:
 		with open(os.path.join(Config.get_instance().get_world_path(), 'stats', uuid + '.json'), 'r') as f:
-			return json.load(f)['stats']['minecraft:' + cls]['minecraft:' + target]
+			target_data: Dict[str, int] = json.load(f)['stats']['minecraft:' + cls]
+			if target == constants.AllTargetTag:
+				return sum(target_data.values())
+			return target_data['minecraft:' + target]
 	except:
 		return None
 

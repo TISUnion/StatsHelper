@@ -1,5 +1,6 @@
 from mcdreforged.api.command import *
 
+from stats_helper import constants
 from stats_helper import quick_scoreboard
 
 stored = quick_scoreboard.quick_scoreboards
@@ -68,7 +69,7 @@ class ScoreboardQuery(ArgumentNode):
 			return ParseResult(scoreboard, len(arg1))  # <alias>
 		remaining = command_builder_util.remove_divider_prefix(text[len(arg1):])
 		arg2 = command_builder_util.get_element(remaining)
-		if len(arg2) > 0 and arg2[0].isalpha():
+		if arg2 == constants.AllTargetTag or (len(arg2) > 0 and arg2[0].isalpha()):
 			return ParseResult((arg1, arg2), len(text) - len(remaining) + len(arg2))  # <cls> <target>
 		else:
 			raise UnknownQuickScoreboard('Unknown scoreboard {}'.format(arg1), len(arg1), arg1)

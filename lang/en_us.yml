@@ -21,6 +21,7 @@ stats_helper.help_message: |
   For §e<stat_target>§r of §6custom§r, check the statistic json file or Minecraft Wiki
   "minecraft" prefix is not required for arguments above
   §7[<-uuid>]§r: Use uuid as the player name; §7[<-bot>]§r: Counts bots; §7[<-tell>]§r: Only visible to yourself; §7[<-all>]§r: List all entries
+  Use §e#all§r as §e<stat_target>§r to display sum of all values in the specified §6stat class§r
   §a[Examples]§r
   §7{prefix} save fly custom aviate_one_cm "I Can Fly"§r
   §7{prefix} query §bFallen_Breath §6used §ewater_bucket§r
