@@ -312,13 +312,13 @@ def register_command(server: PluginServerInterface):
 		# !!stats query [玩家] [保存的统计项] [<-args>]
 		then(Literal('query').then(
 			Text('player').then(
-				exe(ScoreboardQuery('cls/alias'), _show_stat)
+				exe(ScoreboardQuery('cls/alias', allow_all_tag=True), _show_stat)
 			)
 		)).
 		# !!stats rank [统计类别] [统计内容] [<-args>]
 		# !!stats rank [保存的统计项] [<-args>]
 		then(Literal('rank').then(
-			exe(ScoreboardQuery('cls/alias'), _show_rank)
+			exe(ScoreboardQuery('cls/alias', allow_all_tag=True), _show_rank)
 		)).
 		then(exe(Literal('list'), _list_quick_scoreboard)).
 		# !!stats save [要保存的统计项] [统计类别] [统计内容] [<标题>]
