@@ -11,7 +11,7 @@ class Config(Serializable):
 	save_world_on_rank: bool = False
 	save_world_on_scoreboard: bool = True
 	player_name_blacklist: List[str] = [
-		'^bot', 'Steve', 'Alex'
+		'^bot.*', 'Steve', 'Alex'
 	]
 
 	def get_world_path(self) -> str:
